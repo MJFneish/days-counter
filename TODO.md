@@ -42,18 +42,21 @@ version (tag + GitHub release, pushed to `develop`).
       delete with confirm; toasts
 - [x] Empty state
 
-## Phase 5 — Settings (v0.5.0)
-- [ ] Language, appearance (follow system + light/dark tiles)
-- [ ] Countdown options (show seconds, count up after the date)
-- [ ] Widget section (which countdown is pinned, "Add widget to home screen")
-- [ ] About (logo, version, description), reset data with confirm
+## Phase 5 — Android widget (v0.5.0) ✅ (release build passes)
+- [x] Turbo Native Module `DaysWidget` (codegen spec in `src/native/`); `useWidgetSync` pushes
+      the pinned countdown + language + count-up on change and on every foreground
+- [x] `DaysWidgetProvider`: `Countdown.kt` port of the engine, day count + live `Chronometer`
+      H:MM:SS, alarms at each day change and one hour before it ("0:MM:SS" format), progress
+- [x] Four layouts (small / square / wide / large) as an Android 12+ size map, so it resizes
+      live; size thresholds for older Android; per-color gradient backgrounds; RTL; Arabic plurals
+- [x] Declared for `home_screen|keyguard` (lock screen where the device allows it), picker preview
+- [x] Pin-widget request from the app (`requestPinAppWidget`)
 
-## Phase 6 — Android widget (v0.6.0)
-- [ ] TurboModule `DaysWidget` (codegen spec in `src/native/`), pushes the pinned countdown
-- [ ] `AppWidgetProvider` with live `Chronometer` H:M:S + days, alarm at each day boundary,
-      size map (small / wide / large) so it resizes live, RTL + Arabic plurals natively
-- [ ] Declared for `home_screen|keyguard` (lock screen where the device allows it)
-- [ ] Pin-widget request from the app (`requestPinAppWidget`)
+## Phase 6 — Settings (v0.6.0)
+- [x] Language, appearance (follow system + light/dark tiles), about (since v0.3.0)
+- [ ] Countdown options (show seconds, count up after the date, 24-hour time)
+- [ ] Widget section (which countdown is pinned + picker, "Add the widget", lock-screen note)
+- [ ] Delete all countdowns with confirm
 
 ## Phase 7 — Full test + 1.0.0
 - [ ] `yarn test`, `yarn typecheck`, `yarn lint`

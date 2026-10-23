@@ -123,6 +123,50 @@ releases are marked pre-release. **Only the final release carries the APK** (use
   twinkle, min 1.2 s (`MIN_LOADING_VISIBLE_MS` in `App.tsx`). Waits for both stores to hydrate.
   Respects reduced motion.
 
+## Android home-screen widget — read before touching `android/…/widget/`
+
+- **Bridge**: an app-local **Turbo Native Module** `DaysWidget`. Spec
+  [`src/native/NativeDaysWidget.ts`](./src/native/NativeDaysWidget.ts) → codegen
+  (`package.json` → `codegenConfig`, `javaPackageName com.devlance.dayscounter.widget`) generates
+  `NativeDaysWidgetSpec` → [`DaysWidgetModule.kt`](./android/app/src/main/java/com/devlance/dayscounter/widget/DaysWidgetModule.kt),
+  registered by hand in `MainApplication` via `DaysWidgetPackage` (app code isn't autolinked).
+  `TurboModuleRegistry.get` (not `getEnforcing`), so iOS — no native side — gets `null` and
+  `widgetAvailable` is false. Methods: `setPayload(json)`, `requestPin()`,
+  `isRequestPinSupported()`, `getInstalledCount()`.
+- **The widget computes the countdown itself.** JS pushes only the pinned countdown's wall-clock
+  target, title/detail lines, color, language, count-up flag and a few UI strings
+  ([`payload.ts`](./src/widget/payload.ts)); [`useWidgetSync`](./src/widget/useWidgetSync.ts)
+  (App.tsx) re-pushes when any of that changes and on every foreground. Natively,
+  [`Countdown.kt`](./android/app/src/main/java/com/devlance/dayscounter/widget/Countdown.kt) is a
+  port of `remaining()` (lenient `Calendar`, same calendar-day semantics) — **keep the two in
+  sync**, and keep `WidgetPayload` in sync with `WidgetStore.kt`. Known difference: for a target
+  wall time inside a DST *repeated* hour, JS picks the first occurrence and Java the second.
+- **Live seconds without the app**: the day count is text; H:MM:SS is a `Chronometer` counting
+  down to `nextChangeAt` (or up from the last change after the date). `DaysWidgetProvider`
+  schedules an alarm for the day change and one **an hour before it**, to switch the Chronometer
+  format to `"0:%s"` — by default it drops the hour under 60 minutes ("59:59"), which would read
+  as H:MM. Exact alarms only if "Alarms & reminders" is allowed (`SCHEDULE_EXACT_ALARM`,
+  pre-granted on 12/12L), otherwise a 1-minute window; `updatePeriodMillis` 30 min is the
+  backstop; TIME_SET / TIMEZONE / DATE / LOCALE changes and app updates refresh too.
+  The Chronometer's digits follow the **phone's** locale (Android API), the rest the app language.
+- **Resizable**: four layouts sharing view ids — `widget_small` (1×1/2×1: number + unit),
+  `widget_square` (2×2: + name + H:MM:SS), `widget_wide` (n×1: name/date | number/H:MM:SS),
+  `widget_large` (3×2+: + progress). Android 12+ gets them as a size map
+  (40×40 / 100×100 / 180×50 / 200×110 dp — the launcher takes the closest that fits, live while
+  resizing); older versions pick from `OPTION_APPWIDGET_MIN_WIDTH`/`MAX_HEIGHT` with the same
+  thresholds. Min resize 40×40 dp (1×1), default 3×2.
+- Backgrounds: one gradient drawable per countdown color (`res/drawable/widget_bg_*.xml`, same
+  stops as `COUNTDOWN_PALETTE`), set with `setBackgroundResource` on the root
+  (`@android:id/background`, `clipToOutline`, radius = the launcher's on 12+). White text.
+  RTL via `setLayoutDirection` on the root; the progress drawable clips from "start".
+- Unit words use Android `<plurals>` (values-ar has zero/one/two/few/many/other, matching
+  `AR_WORD.day`) through a context switched to the **app's** language; numbers via
+  `NumberFormat` for that locale (Arabic-Indic digits in Arabic).
+- **Lock screen**: declared `home_screen|keyguard` with `initialKeyguardLayout`. Stock Android
+  phones don't allow third-party lock-screen widgets (tablets on Android 15+ and some vendors do);
+  the user declined a lock-screen notification instead (2026-10-23).
+- Picker preview: `widget_preview.xml` (Android 12+ `previewLayout`, sample values, localized).
+
 ## Design system ("Dusk")
 
 Generated with the `ui-ux-pro-max` skill (it recommended "excitement purple + action orange",

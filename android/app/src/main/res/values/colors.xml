@@ -1,3 +1,5 @@
 <resources>
     <color name="bootsplash_background">#170b26</color>
+    <color name="widget_text">#FFFFFFFF</color>
+    <color name="widget_text_muted">#D1FFFFFF</color>
 </resources>

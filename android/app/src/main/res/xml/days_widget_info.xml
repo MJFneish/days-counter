@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Resizable down to 1×1 and up to anything (DaysWidgetProvider switches between four layouts).
+     Default 3×2. `keyguard` lets it on the lock screen of devices that allow lock-screen widgets
+     (stock Android phones don't — tablets with Android 15+ and some vendors do). -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+  android:description="@string/widget_description"
+  android:initialKeyguardLayout="@layout/widget_large"
+  android:initialLayout="@layout/widget_large"
+  android:minWidth="180dp"
+  android:minHeight="110dp"
+  android:minResizeWidth="40dp"
+  android:minResizeHeight="40dp"
+  android:previewLayout="@layout/widget_preview"
+  android:resizeMode="horizontal|vertical"
+  android:targetCellWidth="3"
+  android:targetCellHeight="2"
+  android:updatePeriodMillis="1800000"
+  android:widgetCategory="home_screen|keyguard" />

@@ -18,6 +18,7 @@ import { RootNavigator } from './src/navigation/RootNavigator';
 import { useCountdownStore } from './src/store/useCountdownStore';
 import { useSettingsStore } from './src/store/useSettingsStore';
 import { useTheme } from './src/theme/useTheme';
+import { useWidgetSync } from './src/widget/useWidgetSync';
 
 // The loading screen stays up at least this long even when hydration is instant — a flash reads
 // as a glitch, not as speed (same reasoning and value as the sibling apps).
@@ -33,6 +34,7 @@ function AppContent() {
   const mountedAt = useRef(Date.now());
 
   useClockDriver(showSeconds);
+  useWidgetSync(hasHydrated);
 
   useEffect(() => {
     if (!hasHydrated) return;

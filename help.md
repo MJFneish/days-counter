@@ -61,6 +61,28 @@ Updates `package.json` (source of truth — Settings → About shows it), `andro
 
 ---
 
+## 🧩 Home-screen widget
+
+- Add it: long-press the home screen → **Widgets** → **Days Counter** (or Settings → "Add the
+  widget to your home screen" in the app, on launchers that support it). Long-press the placed
+  widget and drag its edges to resize — the layout switches between small / square / wide / large.
+- It shows the **pinned** countdown (Home → pin button on any countdown, or Settings).
+- For the day count to flip exactly on time on Android 13+, allow **Settings → Apps → Days Counter
+  → Alarms & reminders**. Without it, the flip can lag by up to a minute.
+
+```bash
+adb shell cmd appwidget grantbind --package com.devlance.dayscounter   # allow binding widgets without the prompt (testing)
+adb shell dumpsys appwidget | grep -A3 dayscounter                     # placed widgets + their sizes
+adb shell am broadcast -a com.devlance.dayscounter.widget.REFRESH -n com.devlance.dayscounter/.widget.DaysWidgetProvider   # force a redraw
+adb shell cmd appops set com.devlance.dayscounter SCHEDULE_EXACT_ALARM allow   # exact alarms on 13+
+```
+
+The widget's native code lives in `android/app/src/main/java/com/devlance/dayscounter/widget/`;
+the JS ↔ native contract is the Turbo Module spec `src/native/NativeDaysWidget.ts` (codegen runs
+as part of the Gradle build; `./gradlew :app:generateCodegenArtifactsFromSchema` runs it alone).
+
+---
+
 ## 🎨 Icons & splash
 
 ```bash
