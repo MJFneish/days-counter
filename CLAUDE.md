@@ -29,8 +29,9 @@ be pushed to `develop`** (the repo's only branch). The routine, in this order:
    `git credential fill` — `gh` isn't installed; never print the token).
 
 Versions ran **0.1.0 (scaffold) → minor per feature → 1.0.0 = finished and fully tested**. 0.x
-releases are marked pre-release. **Only the final release carries the APK** (user's choice) —
-`yarn release --asset android/app/build/outputs/apk/release/DaysCounter-<version>.apk`.
+releases are marked pre-release. **No APKs on GitHub** — the user said "do not upload the apk to
+github" (2026-10-23); the one briefly attached to 1.0.0 was removed and the script has no upload
+option. Build APKs locally (help.md) and hand over the path.
 
 ## Stack
 
@@ -271,7 +272,7 @@ yarn test               # Jest
 yarn typecheck          # tsc --noEmit
 yarn lint               # eslint
 yarn bump [patch|minor|major] [--dry-run]   # version bump (package.json + build.gradle + pbxproj)
-yarn release [--asset <apk>] [--dry-run]    # GitHub release for the current version's tag
+yarn release [--dry-run]                    # GitHub release for the current version's tag (no APKs)
 ```
 
 ## Conventions to keep following

@@ -65,8 +65,9 @@ version (tag + GitHub release, pushed to `develop`).
       resized large → wide → square live
 - [x] Fixes from that run: sheets moved off RN `Modal` (bottom of Save/Cancel wasn't touchable),
       hero label under the number (Arabic wrap), Arabic-Indic digits on the widget
-- [x] 1.0.0 release with the APK attached (universal, all ABIs, ~78 MB)
-- [x] 1.0.1: release script streams the APK upload (fetch timed out on 80 MB); app unchanged
+- [x] 1.0.0 release; universal APK (all ABIs, ~78 MB) built locally
+- [x] 1.0.1: release-script upload fix; app unchanged
+- [x] 1.0.2: no APKs on GitHub (user's call) — the 1.0.0 one removed, upload option dropped
 - [ ] Physical phone run (lock screen widget on a device that supports it, exact alarms on 13+)
 - [ ] iOS build (needs macOS; no WidgetKit widget — Android only)
 

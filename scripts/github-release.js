@@ -5,7 +5,6 @@
  *
  * Usage:
  *   yarn release                                   -> release for package.json's version
- *   yarn release --asset android/app/build/outputs/apk/release/DaysCounter-1.0.0.apk
  *   yarn release --notes "text" | --notes-file path
  *   yarn release --dry-run                         -> show what would happen, touch nothing
  *
@@ -16,10 +15,11 @@
  * `gh` isn't installed on this machine, so it talks to the REST API directly with the token Git
  * already stores for github.com (`git credential fill`). The token is never printed.
  * 0.x versions are marked as pre-releases.
+ *
+ * No file uploads, on purpose: the user doesn't want APKs on GitHub (2026-10-23). Builds stay local.
  */
 const { execFileSync } = require('child_process');
 const fs = require('fs');
-const https = require('https');
 const path = require('path');
 
 const root = path.resolve(__dirname, '..');
@@ -41,9 +41,9 @@ function fail(message) {
   process.exit(1);
 }
 
-const known = new Set(['--dry-run', '--asset', '--notes', '--notes-file']);
+const known = new Set(['--dry-run', '--notes', '--notes-file']);
 for (let i = 0; i < args.length; i++) {
-  if (!known.has(args[i])) fail(`unknown argument ${args[i]}\nUsage: yarn release [--asset file] [--notes text | --notes-file path] [--dry-run]`);
+  if (!known.has(args[i])) fail(`unknown argument ${args[i]}\nUsage: yarn release [--notes text | --notes-file path] [--dry-run]`);
   if (args[i] !== '--dry-run') i++;
 }
 
@@ -64,13 +64,9 @@ const remoteTag = git('ls-remote', '--tags', 'origin', `refs/tags/${tag}`);
 if (!remoteTag) fail(`tag ${tag} is not on GitHub yet — tag the bump commit and push with --follow-tags first`);
 if (notes === null) notes = git('log', '-1', '--format=%B', tag);
 
-const assetPath = argValue('--asset');
-if (assetPath && !fs.existsSync(assetPath)) fail(`asset not found: ${assetPath}`);
-
 const prerelease = version.startsWith('0.');
 console.log(`repo:       ${owner}/${repo}`);
 console.log(`release:    ${version} (tag ${tag}${prerelease ? ', pre-release' : ''})`);
-if (assetPath) console.log(`asset:      ${path.basename(assetPath)} (${(fs.statSync(assetPath).size / 1048576).toFixed(1)} MB)`);
 if (dryRun) {
   console.log(`\nnotes:\n${notes}\n\n--dry-run: nothing sent.`);
   process.exit(0);
@@ -96,43 +92,16 @@ const headers = {
   'User-Agent': 'days-counter-release-script',
 };
 
-async function api(method, url, body, extraHeaders = {}) {
+async function api(method, url, body) {
   const res = await fetch(url, {
     method,
-    headers: { ...headers, ...extraHeaders },
+    headers,
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   if (res.status === 404) return null;
   const text = await res.text();
   if (!res.ok) fail(`${method} ${url} → ${res.status} ${text.slice(0, 300)}`);
   return text ? JSON.parse(text) : {};
-}
-
-/**
- * Streams a file to the uploads endpoint with `https.request`. Not `fetch`: Node's built-in fetch
- * gave up on the ~80 MB APK ("fetch failed", its body/headers timeouts can't be raised without the
- * undici package); a plain request has no timeout and doesn't hold a second copy in memory.
- */
-function uploadFile(url, filePath, contentType) {
-  return new Promise((resolve, reject) => {
-    const size = fs.statSync(filePath).size;
-    const req = https.request(
-      url,
-      { method: 'POST', headers: { ...headers, 'Content-Type': contentType, 'Content-Length': size } },
-      res => {
-        let text = '';
-        res.setEncoding('utf8');
-        res.on('data', chunk => (text += chunk));
-        res.on('end', () =>
-          res.statusCode >= 200 && res.statusCode < 300
-            ? resolve(JSON.parse(text))
-            : reject(new Error(`upload → ${res.statusCode} ${text.slice(0, 300)}`)),
-        );
-      },
-    );
-    req.on('error', reject);
-    fs.createReadStream(filePath).on('error', reject).pipe(req);
-  });
 }
 
 async function main() {
@@ -147,17 +116,6 @@ async function main() {
     console.log(`created release ${version}`);
   }
 
-  if (assetPath) {
-    const name = path.basename(assetPath);
-    const existing = (release.assets || []).find(a => a.name === name);
-    if (existing) await api('DELETE', `${base}/releases/assets/${existing.id}`);
-    await uploadFile(
-      `https://uploads.github.com/repos/${owner}/${repo}/releases/${release.id}/assets?name=${encodeURIComponent(name)}`,
-      assetPath,
-      name.endsWith('.apk') ? 'application/vnd.android.package-archive' : 'application/octet-stream',
-    );
-    console.log(`uploaded ${name}`);
-  }
   console.log(release.html_url);
 }
 

@@ -37,14 +37,12 @@ git add -A && git commit -m "…"          # the bump goes in the same commit as
 git tag -a v0.2.0 -m "0.2.0"             # annotated, so --follow-tags pushes it
 git push origin develop --follow-tags
 yarn release                             # GitHub release "0.2.0" on tag v0.2.0 (notes = commit message)
-yarn release --asset android/app/build/outputs/apk/release/DaysCounter-1.0.0.apk   # attach the APK
 yarn release --dry-run                   # preview
 ```
 
 `yarn release` uses the GitHub token Git already stores (`git credential fill`) — `gh` isn't
-installed on this machine. It updates the release if it already exists (re-running it with
-`--asset` replaces a same-named file), and marks 0.x versions as pre-releases. The APK is streamed
-with `https.request` — Node's `fetch` timed out on the ~80 MB universal APK.
+installed on this machine. It updates the release if it already exists, and marks 0.x versions
+as pre-releases. **APKs are not uploaded to GitHub** (the user's choice) — build them locally.
 
 ### Version bump details
 

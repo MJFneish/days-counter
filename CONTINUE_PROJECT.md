@@ -23,7 +23,7 @@ pinned countdown. EN/AR (RTL), light/dark, offline. Built on 2026-10-23 from an 
 | Icon, primary/secondary colors | Left to Claude |
 | Git | **Every commit bumps the version, gets a `v<version>` tag + GitHub release, and is pushed to `develop`** |
 | Versions | 0.1.0 scaffold → minor per feature → **1.0.0** when finished and fully tested |
-| APK on GitHub | Final release only |
+| APK on GitHub | **None** — first "final release only", then "do not upload the apk to github"; the 1.0.0 one was removed |
 | Testing | A **full test at the end** (tests, typecheck, lint, build, emulator) — explicitly asked |
 
 ## State as of this handoff
@@ -35,9 +35,10 @@ pinned countdown. EN/AR (RTL), light/dark, offline. Built on 2026-10-23 from an 
 - v0.5.0: Android widget — Turbo Module bridge, native engine port, live Chronometer, 4 resizable layouts, lock-screen capable.
 - v0.6.0: Settings — countdown options, widget section (picker, add widget), delete all.
 - v1.0.0: full test (27 tests, typecheck, lint, release build, emulator walk-through) and its
-  fixes — sheets off RN Modal, hero label, widget digits. APK attached to the GitHub release.
-- v1.0.1: release-script fix only (stream large uploads); the app is the same as 1.0.0. Both
-  releases carry the universal APK.
+  fixes — sheets off RN Modal, hero label, widget digits.
+- v1.0.1: release-script fix only; the app is the same as 1.0.0.
+- v1.0.2: docs + script — no APKs on GitHub (the 1.0.0 asset was deleted, the upload option
+  removed). Local APK: `android/app/build/outputs/apk/release/DaysCounter-<version>.apk`.
 - **Not verified**: a physical phone, lock-screen placement (needs a device that allows it), the
   exact-alarm path on Android 13+ with "Alarms & reminders" granted, iOS (no macOS here).
 - See `TODO.md` for the rest.
