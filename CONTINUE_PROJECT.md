@@ -33,6 +33,7 @@ pinned countdown. EN/AR (RTL), light/dark, offline. Built on 2026-10-23 from an 
 - v0.3.0: Dusk theme, tab pager, icon, native splash → animated loader, shared clock, first Settings.
 - v0.4.0: Home — live hero (pinned), stats, list, add/edit sheet with wheels, colors, icons.
 - v0.5.0: Android widget — Turbo Module bridge, native engine port, live Chronometer, 4 resizable layouts, lock-screen capable.
+- v0.6.0: Settings — countdown options, widget section (picker, add widget), delete all.
 - See `TODO.md` for the rest.
 
 ## Next steps a fresh session might be asked for

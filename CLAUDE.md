@@ -117,6 +117,15 @@ releases are marked pre-release. **Only the final release carries the APK** (use
   `WheelPicker`, 9 colors, 12 icons, "show on the widget", delete (confirm). A new countdown
   defaults to one month ahead at 00:00 in the first unused color, pinned if none is. A past date
   is allowed (note shown) — it counts up.
+- **Settings** ([`SettingsScreen.tsx`](./src/screens/SettingsScreen.tsx)), in this order:
+  language (segmented EN/AR) · appearance (follow-system switch, light/dark tiles otherwise —
+  same interaction as the sibling apps) · countdown (show seconds — the clock then ticks per
+  minute; count up after the date; 24-hour time) · home-screen widget
+  ([`WidgetSection`](./src/components/settings/WidgetSection.tsx), Android only: the pinned
+  countdown + "Change" → [`CountdownPickerSheet`](./src/components/settings/CountdownPickerSheet.tsx),
+  "Add the widget" via `requestPinAppWidget` when the launcher supports it (manual steps
+  otherwise), resize hint, lock-screen note) · data (delete all, confirm) · about (logo,
+  version from package.json, description).
 - **Loading**: bootsplash (night `#170B26`, 120 dp emblem) → `LoadingScreen`, whose first frame is
   identical (emblem drawn with `arc={false}` + a separate `ArcLayer` at rest), so
   `BootSplash.hide({ fade: false })` is invisible; then the gold arc spins, glows drift, sparks

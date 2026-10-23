@@ -52,11 +52,11 @@ version (tag + GitHub release, pushed to `develop`).
 - [x] Declared for `home_screen|keyguard` (lock screen where the device allows it), picker preview
 - [x] Pin-widget request from the app (`requestPinAppWidget`)
 
-## Phase 6 — Settings (v0.6.0)
+## Phase 6 — Settings (v0.6.0) ✅ (typecheck clean)
 - [x] Language, appearance (follow system + light/dark tiles), about (since v0.3.0)
-- [ ] Countdown options (show seconds, count up after the date, 24-hour time)
-- [ ] Widget section (which countdown is pinned + picker, "Add the widget", lock-screen note)
-- [ ] Delete all countdowns with confirm
+- [x] Countdown options (show seconds, count up after the date, 24-hour time)
+- [x] Widget section (which countdown is pinned + picker, "Add the widget", lock-screen note)
+- [x] Delete all countdowns with confirm
 
 ## Phase 7 — Full test + 1.0.0
 - [ ] `yarn test`, `yarn typecheck`, `yarn lint`
