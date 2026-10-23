@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -6,7 +6,6 @@ import Animated, { FadeIn, LinearTransition } from 'react-native-reanimated';
 import { Plus } from 'lucide-react-native';
 
 import { AppLogo } from '../components/brand/AppLogo';
-import { CountdownEditor } from '../components/editor/CountdownEditor';
 import { CountdownRow } from '../components/home/CountdownRow';
 import { HeroCountdown } from '../components/home/HeroCountdown';
 import { StatsCard } from '../components/home/StatsCard';
@@ -20,11 +19,10 @@ import { useNow } from '../hooks/useClock';
 import { useDirection } from '../hooks/useDirection';
 import { selectPinned, sortCountdowns, useCountdownStore } from '../store/useCountdownStore';
 import { useSettingsStore } from '../store/useSettingsStore';
+import { useSheetStore } from '../store/useSheetStore';
 import { useTheme } from '../theme/useTheme';
 import { radius, spacing, TOUCH_TARGET } from '../theme/spacing';
 import { typography } from '../theme/typography';
-
-type EditorState = { open: false } | { open: true; countdown: Countdown | null };
 
 function EmptyState({ onAdd }: { onAdd: () => void }) {
   const { t } = useTranslation();
@@ -47,7 +45,7 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
 /**
  * Home: today's date, the pinned countdown as the hero (the one on the widget) with its numbers,
  * then every other countdown — upcoming soonest first, passed ones after. Tapping any of them
- * opens the editor sheet; the pin button moves one to the hero + widget.
+ * opens the editor sheet (rendered by SheetHost); the pin button moves one to the hero + widget.
  */
 export default function HomeScreen() {
   const { t } = useTranslation();
@@ -58,7 +56,7 @@ export default function HomeScreen() {
   const countdowns = useCountdownStore(s => s.countdowns);
   const pinned = useCountdownStore(selectPinned);
   const pin = useCountdownStore(s => s.pin);
-  const [editor, setEditor] = useState<EditorState>({ open: false });
+  const openEditor = useSheetStore(s => s.openEditor);
 
   // Re-sort only when a countdown passes its date, not every second.
   const passedCount = countdowns.filter(c => remaining(c.target, now).status !== 'upcoming').length;
@@ -68,9 +66,8 @@ export default function HomeScreen() {
     [countdowns, pinned?.id, passedCount],
   );
 
-  const openNew = useCallback(() => setEditor({ open: true, countdown: null }), []);
-  const openEdit = useCallback((countdown: Countdown) => setEditor({ open: true, countdown }), []);
-  const close = useCallback(() => setEditor({ open: false }), []);
+  const openNew = useCallback(() => openEditor(null), [openEditor]);
+  const openEdit = useCallback((countdown: Countdown) => openEditor(countdown.id), [openEditor]);
   const pinCountdown = useCallback(
     (countdown: Countdown) => {
       pin(countdown.id);
@@ -127,8 +124,6 @@ export default function HomeScreen() {
           </>
         )}
       </ScrollView>
-
-      <CountdownEditor visible={editor.open} countdown={editor.open ? editor.countdown : null} onClose={close} />
     </SafeAreaView>
   );
 }

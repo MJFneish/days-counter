@@ -134,17 +134,19 @@ export function HeroCountdown({ countdown, onPress }: Props) {
 
       {showCount ? (
         <>
-          <View style={[styles.daysRow, { flexDirection: rowDirection }]}>
+          {/* Number above its label, not beside it: side by side, the label wrapped and lost a
+              word in Arabic (seen on the emulator) and a 5-digit count would crowd it out. */}
+          <View style={styles.daysBlock}>
             <Animated.Text
               key={r.days}
               entering={still ? undefined : FadeInDown.duration(260)}
-              style={[typography.hero, { color: colors.onHero }]}
+              style={[typography.hero, { color: colors.onHero, textAlign }]}
               adjustsFontSizeToFit
               numberOfLines={1}
             >
               {formatNumber(r.days, lang)}
             </Animated.Text>
-            <Text style={[typography.subtitle, styles.daysLabel, { color: colors.onHeroMuted, textAlign }]}>
+            <Text style={[typography.subtitle, { color: colors.onHeroMuted, textAlign }]}>
               {`${unitWord('day', r.days, lang)} ${passed ? t('countdown.since') : t('countdown.toGo')}`}
             </Text>
           </View>
@@ -202,8 +204,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   arrived: { alignItems: 'center', gap: spacing.sm, marginTop: spacing.lg },
-  daysRow: { alignItems: 'flex-end', gap: spacing.sm, marginTop: spacing.lg },
-  daysLabel: { flexShrink: 1, marginBottom: 12 },
+  daysBlock: { marginTop: spacing.md },
   tiles: { gap: spacing.sm, marginTop: spacing.md },
   tile: {
     flex: 1,

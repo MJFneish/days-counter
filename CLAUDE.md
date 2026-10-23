@@ -117,6 +117,12 @@ releases are marked pre-release. **Only the final release carries the APK** (use
   `WheelPicker`, 9 colors, 12 icons, "show on the widget", delete (confirm). A new countdown
   defaults to one month ahead at 00:00 in the first unused color, pinned if none is. A past date
   is allowed (note shown) — it counts up.
+- **Sheets are not RN `Modal`s.** [`BottomSheet`](./src/components/ui/BottomSheet.tsx) draws a
+  scrim + sliding sheet over the whole app, closes on the Android back button, and takes a
+  numeric max height from the window. Every sheet (editor, countdown picker) is mounted once in
+  [`SheetHost`](./src/components/SheetHost.tsx) (App.tsx, above the navigator) and opened through
+  [`useSheetStore`](./src/store/useSheetStore.ts) (`openEditor(id | null)`, `openPicker()`).
+  Why: see "Found on the first emulator run" below.
 - **Settings** ([`SettingsScreen.tsx`](./src/screens/SettingsScreen.tsx)), in this order:
   language (segmented EN/AR) · appearance (follow-system switch, light/dark tiles otherwise —
   same interaction as the sibling apps) · countdown (show seconds — the clock then ticks per
@@ -169,8 +175,9 @@ releases are marked pre-release. **Only the final release carries the APK** (use
   (`@android:id/background`, `clipToOutline`, radius = the launcher's on 12+). White text.
   RTL via `setLayoutDirection` on the root; the progress drawable clips from "start".
 - Unit words use Android `<plurals>` (values-ar has zero/one/two/few/many/other, matching
-  `AR_WORD.day`) through a context switched to the **app's** language; numbers via
-  `NumberFormat` for that locale (Arabic-Indic digits in Arabic).
+  `AR_WORD.day`) through a context switched to the **app's** language. Numbers are mapped to
+  Arabic-Indic digits **by hand** (`formatNumber` in the provider): Android's `ar` locale formats
+  with Latin digits, unlike the app.
 - **Lock screen**: declared `home_screen|keyguard` with `initialKeyguardLayout`. Stock Android
   phones don't allow third-party lock-screen widgets (tablets on Android 15+ and some vendors do);
   the user declined a lock-screen notification instead (2026-10-23).
@@ -233,6 +240,26 @@ regenerated from `assets/brand/splash-logo.svg` (command in help.md).
   `adb logcat -s ReactNativeJS:V`.
 - On Windows Metro can hang after `yarn add` rewrites `node_modules` — `yarn start --reset-cache`.
 - On Windows, run Gradle directly (`cd android && ./gradlew …`), not `yarn android`. See help.md.
+
+### Found on the first emulator run (Pixel 8a, API 36, 2026-10-23)
+
+- **RN `Modal` + edge-to-edge (RN 0.87) lays its content out short**: the Modal's content root
+  got the screen height minus the status and navigation bars (2216 of 2400 px) but was drawn from
+  y = 0. A sheet anchored to its bottom overflowed it, so the lower half of Save/Cancel was drawn
+  but not touchable — taps there fell through and closed the sheet. (uiautomator showed the
+  sheet's bounds ending at 2216.) Fixed by dropping `Modal` for `BottomSheet` + `SheetHost`
+  (above). The Hijri converter's `DatePickerSheet` uses the same Modal props — likely affected too.
+- The hero's "days to go" label sat beside the big number and, in Arabic, wrapped and lost a word
+  ("متبقٍّ"). It now sits under the number.
+- Widget: Android formats `ar` numbers with Latin digits — now mapped by hand (see the widget
+  section). The Chronometer's digits still follow the phone (no API to change them).
+- Verified working: loader → Home, live hero + tiles, stats, add (wheels, name, color), edit
+  (icon), delete (confirm, pin hand-over), pin from a row, Settings in EN/AR and light/dark,
+  "Add the widget" (launcher pin dialog with the preview), widget large → wide → square live while
+  resizing, widget re-colored/re-titled on pin change, Arabic widget plurals.
+- Tooling: with `adb shell …` in Git Bash, set `MSYS_NO_PATHCONV=1` or `/sdcard/…` paths get
+  rewritten. An emulator stuck as `unauthorized` after a snapshot boot came back with a cold boot
+  (`emulator -avd Pixel_8a -no-snapshot-load`).
 
 ## Commands
 

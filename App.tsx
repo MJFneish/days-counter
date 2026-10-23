@@ -12,6 +12,7 @@ import { DarkTheme, DefaultTheme, NavigationContainer, type Theme } from '@react
 import BootSplash from 'react-native-bootsplash';
 
 import { LoadingScreen } from './src/components/LoadingScreen';
+import { SheetHost } from './src/components/SheetHost';
 import { ToastHost } from './src/components/Toast';
 import { useClockDriver } from './src/hooks/useClock';
 import { RootNavigator } from './src/navigation/RootNavigator';
@@ -73,6 +74,7 @@ function AppContent() {
           <RootNavigator />
         </NavigationContainer>
       )}
+      {hasHydrated && <SheetHost />}
       <ToastHost />
       {showLoading && <LoadingScreen onReady={hideNativeSplash} />}
     </>

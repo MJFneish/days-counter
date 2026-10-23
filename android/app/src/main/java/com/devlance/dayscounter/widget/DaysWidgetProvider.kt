@@ -163,7 +163,6 @@ class DaysWidgetProvider : AppWidgetProvider() {
       }
 
       val strings = payload.strings
-      val locale = Locale.forLanguageTag(payload.lang)
       val r = Countdown.remaining(countdown.target, now)
       val upcoming = r.status == Status.UPCOMING
       val showCount = upcoming || payload.countUp
@@ -177,7 +176,7 @@ class DaysWidgetProvider : AppWidgetProvider() {
       if (showCount) {
         val unit = localized(context, payload.lang).resources.getQuantityString(R.plurals.widget_days, r.days)
         views.setViewVisibility(R.id.widget_days, View.VISIBLE)
-        views.setTextViewText(R.id.widget_days, NumberFormat.getIntegerInstance(locale).format(r.days))
+        views.setTextViewText(R.id.widget_days, formatNumber(r.days, payload.lang))
         views.setTextViewText(
           R.id.widget_unit,
           if (r.status == Status.ARRIVED && size != Size.LARGE) strings.arrived
@@ -207,7 +206,7 @@ class DaysWidgetProvider : AppWidgetProvider() {
           val percent = floor(p * 100).toInt()
           views.setProgressBar(R.id.widget_progress, 1000, (p * 1000).toInt().coerceAtLeast(20), false)
           views.setViewVisibility(R.id.widget_progress, View.VISIBLE)
-          views.setTextViewText(R.id.widget_percent, strings.progress.replace("{p}", formatPercent(percent, payload.lang, locale)))
+          views.setTextViewText(R.id.widget_percent, strings.progress.replace("{p}", formatPercent(percent, payload.lang)))
           views.setViewVisibility(R.id.widget_percent, View.VISIBLE)
         } else {
           views.setViewVisibility(R.id.widget_progress, View.GONE)
@@ -218,9 +217,26 @@ class DaysWidgetProvider : AppWidgetProvider() {
       return views
     }
 
+    private const val ARABIC_INDIC = "٠١٢٣٤٥٦٧٨٩"
+
+    /** "9,780" / "٩٬٧٨٠" — same as formatNumber in src/i18n/plural.ts. Done by hand rather than
+     * with NumberFormat: Android's "ar" locale formats with Latin digits (seen on the emulator),
+     * while the app shows Arabic-Indic ones. */
+    private fun formatNumber(n: Int, lang: String): String {
+      val grouped = NumberFormat.getIntegerInstance(Locale.US).format(n)
+      if (lang != "ar") return grouped
+      return grouped.map { c ->
+        when (c) {
+          in '0'..'9' -> ARABIC_INDIC[c - '0']
+          ',' -> '٬'
+          else -> c
+        }
+      }.joinToString("")
+    }
+
     /** "62%" / "٦٢٪" — same as formatPercent in src/core/format.ts. */
-    private fun formatPercent(percent: Int, lang: String, locale: Locale): String {
-      val digits = NumberFormat.getIntegerInstance(locale).format(percent)
+    private fun formatPercent(percent: Int, lang: String): String {
+      val digits = formatNumber(percent, lang)
       return if (lang == "ar") "$digits٪" else "$digits%"
     }
 

@@ -58,11 +58,16 @@ version (tag + GitHub release, pushed to `develop`).
 - [x] Widget section (which countdown is pinned + picker, "Add the widget", lock-screen note)
 - [x] Delete all countdowns with confirm
 
-## Phase 7 — Full test + 1.0.0
-- [ ] `yarn test`, `yarn typecheck`, `yarn lint`
-- [ ] Release build, emulator run (Home, add/edit/delete, Settings EN/AR light/dark, widget
-      placed + resized), fixes
-- [ ] 1.0.0 release with the APK attached
+## Phase 7 — Full test + 1.0.0 ✅
+- [x] `yarn test` (27/27), `yarn typecheck` (clean), `yarn lint` (0 errors, style warnings only)
+- [x] Release build (arm64-v8a + x86_64), emulator run on a Pixel 8a (API 36): loader, Home, add /
+      edit / delete, pin, Settings EN/AR light/dark, widget placed via the in-app button and
+      resized large → wide → square live
+- [x] Fixes from that run: sheets moved off RN `Modal` (bottom of Save/Cancel wasn't touchable),
+      hero label under the number (Arabic wrap), Arabic-Indic digits on the widget
+- [x] 1.0.0 release with the APK attached
+- [ ] Physical phone run (lock screen widget on a device that supports it, exact alarms on 13+)
+- [ ] iOS build (needs macOS; no WidgetKit widget — Android only)
 
 ## Ideas / not built (ask the user before building)
 - Lock-screen live notification (offered, user chose widget only)

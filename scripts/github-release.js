@@ -17,6 +17,7 @@
  * already stores for github.com (`git credential fill`). The token is never printed.
  * 0.x versions are marked as pre-releases.
  */
+const { Buffer } = require('buffer');
 const { execFileSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');

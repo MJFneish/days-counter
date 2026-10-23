@@ -34,6 +34,10 @@ pinned countdown. EN/AR (RTL), light/dark, offline. Built on 2026-10-23 from an 
 - v0.4.0: Home — live hero (pinned), stats, list, add/edit sheet with wheels, colors, icons.
 - v0.5.0: Android widget — Turbo Module bridge, native engine port, live Chronometer, 4 resizable layouts, lock-screen capable.
 - v0.6.0: Settings — countdown options, widget section (picker, add widget), delete all.
+- v1.0.0: full test (27 tests, typecheck, lint, release build, emulator walk-through) and its
+  fixes — sheets off RN Modal, hero label, widget digits. APK attached to the GitHub release.
+- **Not verified**: a physical phone, lock-screen placement (needs a device that allows it), the
+  exact-alarm path on Android 13+ with "Alarms & reminders" granted, iOS (no macOS here).
 - See `TODO.md` for the rest.
 
 ## Next steps a fresh session might be asked for

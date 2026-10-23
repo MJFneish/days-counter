@@ -14,15 +14,15 @@ import NativeDaysWidget from '../../native/NativeDaysWidget';
 import { useNow } from '../../hooks/useClock';
 import { useDirection } from '../../hooks/useDirection';
 import { selectPinned, useCountdownStore } from '../../store/useCountdownStore';
+import { useSheetStore } from '../../store/useSheetStore';
 import { accentOf } from '../../theme/countdownColors';
 import { useTheme } from '../../theme/useTheme';
 import { radius, spacing, TOUCH_TARGET } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
 import { widgetAvailable } from '../../widget/useWidgetSync';
-import { CountdownPickerSheet } from './CountdownPickerSheet';
 
-/** Settings → Home-screen widget: which countdown it shows (with a picker), a button that asks
- * the launcher to place the widget, and the lock-screen note. Android only. */
+/** Settings → Home-screen widget: which countdown it shows (picker sheet via SheetHost), a button
+ * that asks the launcher to place the widget, and the lock-screen note. Android only. */
 export function WidgetSection() {
   const { t } = useTranslation();
   const { colors, isDark } = useTheme();
@@ -30,8 +30,7 @@ export function WidgetSection() {
   const now = useNow();
   const pinned = useCountdownStore(selectPinned);
   const count = useCountdownStore(s => s.countdowns.length);
-  const pin = useCountdownStore(s => s.pin);
-  const [pickerOpen, setPickerOpen] = useState(false);
+  const openPicker = useSheetStore(s => s.openPicker);
   const [canRequestPin, setCanRequestPin] = useState(false);
 
   useEffect(() => {
@@ -73,7 +72,7 @@ export function WidgetSection() {
           </View>
           {count > 1 && (
             <Pressable
-              onPress={() => setPickerOpen(true)}
+              onPress={openPicker}
               style={({ pressed }) => [styles.change, { backgroundColor: colors.surfaceAlt }, pressed && styles.pressed]}
               accessibilityRole="button"
               accessibilityLabel={`${t('common.change')} — ${t('settings.chooseCountdown')}`}
@@ -107,16 +106,6 @@ export function WidgetSection() {
           <Text style={[typography.caption, styles.text, { color: colors.textMuted, textAlign }]}>{t('settings.lockScreenNote')}</Text>
         </View>
       </Card>
-
-      <CountdownPickerSheet
-        visible={pickerOpen}
-        onClose={() => setPickerOpen(false)}
-        onPick={id => {
-          pin(id);
-          setPickerOpen(false);
-          showToast(t('toast.pinned'));
-        }}
-      />
     </>
   );
 }

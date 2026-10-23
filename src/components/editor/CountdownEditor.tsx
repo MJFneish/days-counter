@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import Animated, { SlideInDown } from 'react-native-reanimated';
 import { Check, Info, Trash2, X } from 'lucide-react-native';
 
 import { COUNTDOWN_ICON_COMPONENTS } from '../CountdownIcon';
 import { DateWheels, TimeWheels, YEAR_MAX, YEAR_MIN } from '../picker/DateTimeWheels';
 import { showToast } from '../Toast';
+import { BottomSheet } from '../ui/BottomSheet';
 import { GradientFill } from '../ui/GradientFill';
 import { PressableScale } from '../ui/PressableScale';
 import { SectionLabel } from '../ui/SectionLabel';
@@ -25,6 +24,7 @@ import { useNow } from '../../hooks/useClock';
 import { useDirection } from '../../hooks/useDirection';
 import { useCountdownStore } from '../../store/useCountdownStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
+import { useSheetStore } from '../../store/useSheetStore';
 import { COUNTDOWN_PALETTE } from '../../theme/countdownColors';
 import { useTheme } from '../../theme/useTheme';
 import { radius, spacing, TOUCH_TARGET } from '../../theme/spacing';
@@ -51,23 +51,19 @@ function newDraft(existing: Countdown[], hasPinned: boolean): Draft {
   return { title: '', target, color, icon: 'calendar', pin: !hasPinned };
 }
 
-interface Props {
-  visible: boolean;
-  /** null = a new countdown. */
-  countdown: Countdown | null;
-  onClose: () => void;
-}
-
 /**
  * Bottom sheet to add or edit a countdown: a live preview in the chosen gradient, name, date and
- * time wheels, color, icon, "show on the widget", delete. Nothing is saved until "Save".
+ * time wheels, color, icon, "show on the widget", delete. Nothing is saved until "Save". Opened
+ * through `useSheetStore().openEditor(id | null)`; rendered once by `SheetHost`.
  */
-export function CountdownEditor({ visible, countdown, onClose }: Props) {
+export function CountdownEditor() {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const { lang, rowDirection, textAlign, writingDirection } = useDirection();
-  const insets = useSafeAreaInsets();
   const now = useNow();
+  const editor = useSheetStore(s => s.editor);
+  const onClose = useSheetStore(s => s.closeEditor);
+  const visible = editor.open;
   const use24h = useSettingsStore(s => s.use24h);
   const countdowns = useCountdownStore(s => s.countdowns);
   const pinnedId = useCountdownStore(s => s.pinnedId);
@@ -75,6 +71,7 @@ export function CountdownEditor({ visible, countdown, onClose }: Props) {
   const update = useCountdownStore(s => s.update);
   const remove = useCountdownStore(s => s.remove);
   const pin = useCountdownStore(s => s.pin);
+  const countdown = (editor.open && editor.countdownId && countdowns.find(c => c.id === editor.countdownId)) || null;
 
   const [draft, setDraft] = useState<Draft>(() => newDraft(countdowns, !!pinnedId));
   const isPinned = !!countdown && countdown.id === pinnedId;
@@ -129,194 +126,175 @@ export function CountdownEditor({ visible, countdown, onClose }: Props) {
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent navigationBarTranslucent>
-      <Pressable style={[styles.scrim, { backgroundColor: colors.scrim }]} onPress={onClose} accessibilityLabel={t('common.close')} />
-      <Animated.View
-        entering={SlideInDown.duration(260)}
-        style={[styles.sheet, { backgroundColor: colors.surface, paddingBottom: insets.bottom + spacing.md, maxHeight: '94%' }]}
-        accessibilityViewIsModal
-      >
-        <View style={[styles.handle, { backgroundColor: colors.border }]} />
-        <View style={[styles.titleRow, { flexDirection: rowDirection }]}>
-          <Text style={[typography.title, styles.flex, { color: colors.text, textAlign }]} accessibilityRole="header">
-            {countdown ? t('editor.editTitle') : t('editor.newTitle')}
-          </Text>
-          <Pressable
-            onPress={onClose}
-            style={({ pressed }) => [styles.close, { backgroundColor: colors.surfaceAlt }, pressed && styles.pressed]}
-            accessibilityRole="button"
-            accessibilityLabel={t('common.close')}
-          >
-            <X size={20} color={colors.text} />
-          </Pressable>
-        </View>
+    <BottomSheet visible={visible} onClose={onClose}>
+      <View style={[styles.titleRow, { flexDirection: rowDirection }]}>
+        <Text style={[typography.title, styles.flex, { color: colors.text, textAlign }]} accessibilityRole="header">
+          {countdown ? t('editor.editTitle') : t('editor.newTitle')}
+        </Text>
+        <Pressable
+          onPress={onClose}
+          style={({ pressed }) => [styles.close, { backgroundColor: colors.surfaceAlt }, pressed && styles.pressed]}
+          accessibilityRole="button"
+          accessibilityLabel={t('common.close')}
+        >
+          <X size={20} color={colors.text} />
+        </Pressable>
+      </View>
 
-        <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-          {/* Live preview */}
-          <View style={[styles.preview, { backgroundColor: palette.to, flexDirection: rowDirection }]}>
-            <GradientFill id={`editor-${draft.color}`} from={palette.from} to={palette.to} circles={[[0.96, 0.1, 0.3, 0.08]]} />
-            <View style={[styles.previewIcon, { backgroundColor: colors.onHeroPanel }]}>
-              <PreviewIcon size={22} color={colors.onHero} />
-            </View>
-            <View style={styles.flex}>
-              <Text numberOfLines={1} style={[typography.bodyStrong, { color: colors.onHero, textAlign }]}>
-                {countdownTitle(preview, lang)}
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        {/* Live preview */}
+        <View style={[styles.preview, { backgroundColor: palette.to, flexDirection: rowDirection }]}>
+          <GradientFill id={`editor-${draft.color}`} from={palette.from} to={palette.to} circles={[[0.96, 0.1, 0.3, 0.08]]} />
+          <View style={[styles.previewIcon, { backgroundColor: colors.onHeroPanel }]}>
+            <PreviewIcon size={22} color={colors.onHero} />
+          </View>
+          <View style={styles.flex}>
+            <Text numberOfLines={1} style={[typography.bodyStrong, { color: colors.onHero, textAlign }]}>
+              {countdownTitle(preview, lang)}
+            </Text>
+            {!!previewSubtitle && (
+              <Text numberOfLines={1} style={[typography.caption, { color: colors.onHeroMuted, textAlign }]}>
+                {previewSubtitle}
               </Text>
-              {!!previewSubtitle && (
-                <Text numberOfLines={1} style={[typography.caption, { color: colors.onHeroMuted, textAlign }]}>
-                  {previewSubtitle}
-                </Text>
-              )}
-            </View>
-            <Text style={[typography.bodyStrong, { color: colors.onHero }]}>{relativePhrase(r, lang, t)}</Text>
+            )}
           </View>
-
-          {/* Name */}
-          <SectionLabel first>{t('editor.name')}</SectionLabel>
-          <TextInput
-            value={draft.title}
-            onChangeText={title => set({ title })}
-            placeholder={t('editor.namePlaceholder')}
-            placeholderTextColor={colors.textMuted}
-            maxLength={TITLE_MAX}
-            returnKeyType="done"
-            style={[
-              typography.body,
-              styles.input,
-              { color: colors.text, backgroundColor: colors.surfaceAlt, borderColor: colors.border, textAlign, writingDirection },
-            ]}
-            accessibilityLabel={t('editor.name')}
-            accessibilityHint={t('editor.nameHint')}
-          />
-          <Text style={[typography.caption, styles.hint, { color: colors.textMuted, textAlign }]}>{t('editor.nameHint')}</Text>
-
-          {/* Date + time */}
-          <SectionLabel>{t('editor.date')}</SectionLabel>
-          <DateWheels value={draft.target} onChange={target => set({ target })} fadeColor={colors.surface} />
-          <SectionLabel>{t('editor.time')}</SectionLabel>
-          <TimeWheels value={draft.target} onChange={target => set({ target })} fadeColor={colors.surface} use24h={use24h} />
-          {isPast && (
-            <View style={[styles.note, { backgroundColor: colors.primarySoft, flexDirection: rowDirection }]}>
-              <Info size={18} color={colors.primary} />
-              <Text style={[typography.caption, styles.flex, { color: colors.text, textAlign }]}>{t('editor.pastNote')}</Text>
-            </View>
-          )}
-
-          {/* Color */}
-          <SectionLabel>{t('editor.color')}</SectionLabel>
-          <View style={[styles.swatches, { flexDirection: rowDirection }]} accessibilityRole="radiogroup">
-            {COUNTDOWN_COLORS.map(c => {
-              const active = c === draft.color;
-              return (
-                <Pressable
-                  key={c}
-                  onPress={() => set({ color: c })}
-                  style={styles.swatchHit}
-                  accessibilityRole="radio"
-                  accessibilityState={{ checked: active }}
-                  accessibilityLabel={t(`editor.colors.${c}`)}
-                >
-                  <View style={[styles.swatchRing, { borderColor: active ? COUNTDOWN_PALETTE[c].to : 'transparent' }]}>
-                    <View style={[styles.swatch, { backgroundColor: COUNTDOWN_PALETTE[c].to }]}>
-                      {active && <Check size={18} color="#FFFFFF" strokeWidth={3} />}
-                    </View>
-                  </View>
-                </Pressable>
-              );
-            })}
-          </View>
-
-          {/* Icon */}
-          <SectionLabel>{t('editor.icon')}</SectionLabel>
-          <View style={[styles.icons, { flexDirection: rowDirection }]} accessibilityRole="radiogroup">
-            {COUNTDOWN_ICONS.map(icon => {
-              const Icon = COUNTDOWN_ICON_COMPONENTS[icon];
-              const active = icon === draft.icon;
-              return (
-                <Pressable
-                  key={icon}
-                  onPress={() => set({ icon })}
-                  style={[
-                    styles.iconCell,
-                    {
-                      backgroundColor: active ? COUNTDOWN_PALETTE[draft.color].to : colors.surfaceAlt,
-                    },
-                  ]}
-                  accessibilityRole="radio"
-                  accessibilityState={{ checked: active }}
-                  accessibilityLabel={t(`editor.icons.${icon}`)}
-                >
-                  <Icon size={22} color={active ? '#FFFFFF' : colors.textMuted} />
-                </Pressable>
-              );
-            })}
-          </View>
-
-          {/* Pin */}
-          {!isPinned && (
-            <View style={[styles.pinRow, { backgroundColor: colors.surfaceAlt, flexDirection: rowDirection }]}>
-              <View style={styles.flex}>
-                <Text style={[typography.bodyStrong, { color: colors.text, textAlign }]}>{t('editor.pin')}</Text>
-                <Text style={[typography.caption, { color: colors.textMuted, textAlign }]}>{t('editor.pinHint')}</Text>
-              </View>
-              <Switch
-                value={draft.pin}
-                onValueChange={value => set({ pin: value })}
-                trackColor={{ false: colors.switchTrackOff, true: colors.primary }}
-                thumbColor={draft.pin ? colors.onPrimary : colors.switchThumbOff}
-                accessibilityLabel={t('editor.pin')}
-              />
-            </View>
-          )}
-
-          {countdown && (
-            <Pressable
-              onPress={confirmDelete}
-              style={({ pressed }) => [styles.deleteRow, { borderColor: colors.danger, flexDirection: rowDirection }, pressed && styles.pressed]}
-              accessibilityRole="button"
-            >
-              <Trash2 size={18} color={colors.danger} />
-              <Text style={[typography.bodyStrong, { color: colors.danger }]}>{t('editor.delete')}</Text>
-            </Pressable>
-          )}
-        </ScrollView>
-
-        <View style={[styles.actions, { flexDirection: rowDirection, borderTopColor: colors.border }]}>
-          <PressableScale
-            containerStyle={styles.flex}
-            style={[styles.action, { backgroundColor: colors.surfaceAlt }]}
-            onPress={onClose}
-            accessibilityRole="button"
-          >
-            <Text style={[typography.bodyStrong, { color: colors.text }]}>{t('common.cancel')}</Text>
-          </PressableScale>
-          <PressableScale
-            containerStyle={styles.flex}
-            style={[styles.action, { backgroundColor: colors.primary }]}
-            onPress={save}
-            accessibilityRole="button"
-          >
-            <Text style={[typography.bodyStrong, { color: colors.onPrimary }]}>{t('common.save')}</Text>
-          </PressableScale>
+          <Text style={[typography.bodyStrong, { color: colors.onHero }]}>{relativePhrase(r, lang, t)}</Text>
         </View>
-      </Animated.View>
-    </Modal>
+
+        {/* Name */}
+        <SectionLabel first>{t('editor.name')}</SectionLabel>
+        <TextInput
+          value={draft.title}
+          onChangeText={title => set({ title })}
+          placeholder={t('editor.namePlaceholder')}
+          placeholderTextColor={colors.textMuted}
+          maxLength={TITLE_MAX}
+          returnKeyType="done"
+          style={[
+            typography.body,
+            styles.input,
+            { color: colors.text, backgroundColor: colors.surfaceAlt, borderColor: colors.border, textAlign, writingDirection },
+          ]}
+          accessibilityLabel={t('editor.name')}
+          accessibilityHint={t('editor.nameHint')}
+        />
+        <Text style={[typography.caption, styles.hint, { color: colors.textMuted, textAlign }]}>{t('editor.nameHint')}</Text>
+
+        {/* Date + time */}
+        <SectionLabel>{t('editor.date')}</SectionLabel>
+        <DateWheels value={draft.target} onChange={target => set({ target })} fadeColor={colors.surface} />
+        <SectionLabel>{t('editor.time')}</SectionLabel>
+        <TimeWheels value={draft.target} onChange={target => set({ target })} fadeColor={colors.surface} use24h={use24h} />
+        {isPast && (
+          <View style={[styles.note, { backgroundColor: colors.primarySoft, flexDirection: rowDirection }]}>
+            <Info size={18} color={colors.primary} />
+            <Text style={[typography.caption, styles.flex, { color: colors.text, textAlign }]}>{t('editor.pastNote')}</Text>
+          </View>
+        )}
+
+        {/* Color */}
+        <SectionLabel>{t('editor.color')}</SectionLabel>
+        <View style={[styles.swatches, { flexDirection: rowDirection }]} accessibilityRole="radiogroup">
+          {COUNTDOWN_COLORS.map(c => {
+            const active = c === draft.color;
+            return (
+              <Pressable
+                key={c}
+                onPress={() => set({ color: c })}
+                style={styles.swatchHit}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: active }}
+                accessibilityLabel={t(`editor.colors.${c}`)}
+              >
+                <View style={[styles.swatchRing, { borderColor: active ? COUNTDOWN_PALETTE[c].to : 'transparent' }]}>
+                  <View style={[styles.swatch, { backgroundColor: COUNTDOWN_PALETTE[c].to }]}>
+                    {active && <Check size={18} color="#FFFFFF" strokeWidth={3} />}
+                  </View>
+                </View>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        {/* Icon */}
+        <SectionLabel>{t('editor.icon')}</SectionLabel>
+        <View style={[styles.icons, { flexDirection: rowDirection }]} accessibilityRole="radiogroup">
+          {COUNTDOWN_ICONS.map(icon => {
+            const Icon = COUNTDOWN_ICON_COMPONENTS[icon];
+            const active = icon === draft.icon;
+            return (
+              <Pressable
+                key={icon}
+                onPress={() => set({ icon })}
+                style={[
+                  styles.iconCell,
+                  {
+                    backgroundColor: active ? COUNTDOWN_PALETTE[draft.color].to : colors.surfaceAlt,
+                  },
+                ]}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: active }}
+                accessibilityLabel={t(`editor.icons.${icon}`)}
+              >
+                <Icon size={22} color={active ? '#FFFFFF' : colors.textMuted} />
+              </Pressable>
+            );
+          })}
+        </View>
+
+        {/* Pin */}
+        {!isPinned && (
+          <View style={[styles.pinRow, { backgroundColor: colors.surfaceAlt, flexDirection: rowDirection }]}>
+            <View style={styles.flex}>
+              <Text style={[typography.bodyStrong, { color: colors.text, textAlign }]}>{t('editor.pin')}</Text>
+              <Text style={[typography.caption, { color: colors.textMuted, textAlign }]}>{t('editor.pinHint')}</Text>
+            </View>
+            <Switch
+              value={draft.pin}
+              onValueChange={value => set({ pin: value })}
+              trackColor={{ false: colors.switchTrackOff, true: colors.primary }}
+              thumbColor={draft.pin ? colors.onPrimary : colors.switchThumbOff}
+              accessibilityLabel={t('editor.pin')}
+            />
+          </View>
+        )}
+
+        {countdown && (
+          <Pressable
+            onPress={confirmDelete}
+            style={({ pressed }) => [styles.deleteRow, { borderColor: colors.danger, flexDirection: rowDirection }, pressed && styles.pressed]}
+            accessibilityRole="button"
+          >
+            <Trash2 size={18} color={colors.danger} />
+            <Text style={[typography.bodyStrong, { color: colors.danger }]}>{t('editor.delete')}</Text>
+          </Pressable>
+        )}
+      </ScrollView>
+
+      <View style={[styles.actions, { flexDirection: rowDirection, borderTopColor: colors.border }]}>
+        <PressableScale
+          containerStyle={styles.flex}
+          style={[styles.action, { backgroundColor: colors.surfaceAlt }]}
+          onPress={onClose}
+          accessibilityRole="button"
+        >
+          <Text style={[typography.bodyStrong, { color: colors.text }]}>{t('common.cancel')}</Text>
+        </PressableScale>
+        <PressableScale
+          containerStyle={styles.flex}
+          style={[styles.action, { backgroundColor: colors.primary }]}
+          onPress={save}
+          accessibilityRole="button"
+        >
+          <Text style={[typography.bodyStrong, { color: colors.onPrimary }]}>{t('common.save')}</Text>
+        </PressableScale>
+      </View>
+    </BottomSheet>
   );
 }
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  scrim: { ...StyleSheet.absoluteFill },
-  sheet: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
-    paddingTop: spacing.sm,
-  },
-  handle: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, marginBottom: spacing.sm },
   titleRow: { alignItems: 'center', gap: spacing.md, paddingHorizontal: spacing.lg, marginBottom: spacing.sm },
   close: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   scroll: { flexShrink: 1 },

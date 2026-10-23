@@ -188,6 +188,11 @@ The `arm64-v8a` release APK runs on real phones only — x86_64 emulators need t
 
 Gradle needs JDK 17 (`JAVA_HOME=C:\Program Files\Java\jdk-17` on this machine).
 
+**Emulator stuck as `unauthorized`** in `adb devices` after starting from a snapshot: kill it
+(`adb -s emulator-5554 emu kill`) and cold-boot: `emulator -avd Pixel_8a -no-snapshot-load`.
+In Git Bash, prefix `adb shell` commands that use device paths with `MSYS_NO_PATHCONV=1`
+(otherwise `/sdcard/…` becomes `C:/Program Files/Git/sdcard/…`).
+
 **"ninja: error: Stat(…): Filename longer than 260 characters"** — Windows path limit hit by the
 native codegen build. Already fixed: `android/app/build.gradle` pins CMake **3.31.6** (Ninja 1.12,
 long-path aware). Requirements if it ever comes back:
