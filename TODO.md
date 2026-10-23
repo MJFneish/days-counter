@@ -15,13 +15,14 @@ version (tag + GitHub release, pushed to `develop`).
 - [x] `scripts/bump-version.js` (`yarn bump`), `scripts/github-release.js` (`yarn release`)
 - [x] Docs: CLAUDE.md, CONTINUE_PROJECT.md, TODO.md, help.md, README.md, `.claude/skills/verify`
 
-## Phase 2 — Countdown engine + stores (v0.2.0)
-- [ ] `src/core/countdown.ts`: calendar-aware remaining time (days flip at the target's wall-clock
-      time, also across DST), H/M/S remainder, progress, past/future, "since" mode
-- [ ] Breakdown phrases (months + days, weeks, total hours) with Arabic plurals
-- [ ] Countdown store (zustand + AsyncStorage): list, pinned id, add/edit/delete, seeded with
-      5 Sep 2027; settings store (language, theme, show seconds, count up after the date)
-- [ ] Jest tests in `Asia/Beirut` (DST crossings, month ends, leap day, past dates)
+## Phase 2 — Countdown engine + stores (v0.2.0) ✅ (19/19 tests)
+- [x] `src/core/countdown.ts`: calendar-aware remaining time (days flip at the target's wall-clock
+      time, also across DST), H/M/S remainder, progress, upcoming/arrived/past (count up)
+- [x] Breakdown phrases (months + days, weeks, total hours) with Arabic plurals; date/time formats
+- [x] Countdown store (zustand + AsyncStorage): list, pinned id, add/edit/delete, seeded with
+      5 Sep 2027; settings store (language, theme, show seconds, count up, 24-hour clock)
+- [x] i18n EN/AR strings for the whole app
+- [x] Jest tests in `Asia/Beirut` (DST crossings, every midnight flip, leap day, past dates)
 
 ## Phase 3 — App shell, brand, loader (v0.3.0)
 - [ ] Theme "Dusk" light/dark/system, spacing/typography tokens, i18n EN/AR, `useDirection`

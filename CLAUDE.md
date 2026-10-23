@@ -51,6 +51,44 @@ releases are marked pre-release. **Only the final release carries the APK** (use
 - Native splash: `react-native-bootsplash` → hands off to the animated JS `LoadingScreen`.
 - Relative imports (no path alias).
 
+## Countdown engine — read before touching `src/core/`
+
+- A countdown stores its target as a **wall-clock `LocalDateTime`** (`{year, month, day, hour,
+  minute}`, device time zone), never an epoch — "5 Sep 2027 00:00" stays local midnight even if
+  the phone changes time zone. `toInstant()` resolves it with `new Date(y, m-1, d, h, min)`.
+- [`remaining(target, now)`](./src/core/countdown.ts) counts **calendar days anchored to the
+  target's time of day**: `days` = the largest d with "target − d calendar days" ≥ now. A midnight
+  countdown therefore flips its day count at local midnight, also across DST — counting 24-hour
+  blocks would flip it at 23:00 or 01:00 for half the year. The H/M/S part is the physical time to
+  that next flip (`nextChangeAt`), so on a DST day it can read up to 24:59:59 / start at 22:59:59.
+  A skipped midnight (Lebanon springs forward 00:00 → 01:00) resolves to 01:00.
+- Seconds are **truncated**, like Android's `Chronometer`, so the app and the widget tick together.
+- After the target: `arrived` for the first day (the "The day is here!" state), then `past`, both
+  counting up the same way. Settings → "Count up after the date" can hide the count-up.
+- `calendarSpan` = the most whole months that fit (clamped to month ends: 31 Jan → 1 Mar is
+  "1 month and 1 day"), then leftover days — computed in UTC day numbers, free of DST.
+- Counted phrases ("10 months and 12 days", "١٠ أشهر و١٢ يومًا") come from
+  [`src/i18n/plural.ts`](./src/i18n/plural.ts), **not** i18next plurals — those need
+  `Intl.PluralRules`, which Hermes doesn't reliably provide, and Arabic needs 6 CLDR forms.
+  `unitWord()` gives the bare noun for a label under a big number ("يومًا", "دقائق").
+- Arabic UI shows Arabic-Indic digits via `localizeDigits()`; Gregorian month names are Levantine
+  (كانون الثاني…), as Lebanese calendars print them.
+- Tests: [`countdown.test.ts`](./src/core/__tests__/countdown.test.ts) runs in **Asia/Beirut**
+  (`jest.globalSetup.js` sets `TZ`), covering the user's example (23 Oct 2026 15:00 → 316 days
+  9:00:00 to 5 Sep 2027), every midnight flip on the way, both 2026/27 DST changes, leap day,
+  arrived/past, spans and both languages' phrases.
+
+### Stores
+
+- [`useCountdownStore`](./src/store/useCountdownStore.ts) — `countdowns[]`, `pinnedId` (the Home
+  hero + the widget; always set while any countdown exists — removing the pinned one hands it to
+  the next one due), `seeded` (the user's 5 Sep 2027 example is added once on first launch, with
+  an empty title so it shows as its date; deleting everything doesn't revive it). Persisted data
+  is sanitized on load (`merge`).
+- [`useSettingsStore`](./src/store/useSettingsStore.ts) — language, theme mode, show seconds,
+  count up, 24-hour clock (default from `react-native-localize`'s `uses24HourClock()`).
+- App start waits for **both** stores' `hasHydrated`.
+
 ## Known gotchas (inherited from the Hijri converter — all still apply)
 
 - **RN CLI init bugs**: Kotlin sources landed in `java/com/com.devlance.dayscounter/` (moved to

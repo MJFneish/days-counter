@@ -28,7 +28,9 @@ pinned countdown. EN/AR (RTL), light/dark, offline. Built on 2026-10-23 from an 
 
 ## State as of this handoff
 
-- v0.1.0: scaffold, configs, patches, bump + release scripts, docs. See `TODO.md` for the rest.
+- v0.1.0: scaffold, configs, patches, bump + release scripts, docs.
+- v0.2.0: countdown engine (calendar-day, DST-safe) + 19 Jest tests, stores, EN/AR strings.
+- See `TODO.md` for the rest.
 
 ## Next steps a fresh session might be asked for
 
