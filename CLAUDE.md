@@ -89,6 +89,53 @@ releases are marked pre-release. **Only the final release carries the APK** (use
   count up, 24-hour clock (default from `react-native-localize`'s `uses24HourClock()`).
 - App start waits for **both** stores' `hasHydrated`.
 
+## UI architecture
+
+- **Tabs pager** ([`MainTabs.tsx`](./src/navigation/MainTabs.tsx)): ported from prayer-times-lb via
+  the Hijri converter — all pages side by side, the row live-translates with the finger, snaps on
+  release/fling. `failOffsetY` keeps vertical drags (scrolling, wheels) from starting a tab swipe.
+  **In Arabic the row and the tab bar mirror together.** Screens reach tabs via
+  `useTabPager().goToTab()`.
+- **One clock** ([`useClock.ts`](./src/hooks/useClock.ts)): `useClockDriver` (mounted once in
+  App.tsx) ticks a zustand store on whole seconds — whole minutes when "Show seconds" is off —
+  aligned to the wall clock, and stops in the background. Every countdown reads `useNow()`, so
+  they all tick together. Don't add per-component intervals.
+- **Loading**: bootsplash (night `#170B26`, 120 dp emblem) → `LoadingScreen`, whose first frame is
+  identical (emblem drawn with `arc={false}` + a separate `ArcLayer` at rest), so
+  `BootSplash.hide({ fade: false })` is invisible; then the gold arc spins, glows drift, sparks
+  twinkle, min 1.2 s (`MIN_LOADING_VISIBLE_MS` in `App.tsx`). Waits for both stores to hydrate.
+  Respects reduced motion.
+
+## Design system ("Dusk")
+
+Generated with the `ui-ux-pro-max` skill (it recommended "excitement purple + action orange",
+vibrant & block-based, for a countdown/event app). Orange leads so the app stays distinct from
+its siblings (Hijri converter = indigo, prayer-times-lb = emerald). Tokens in
+[`src/theme/colors.ts`](./src/theme/colors.ts):
+
+| Token | Light | Dark |
+|---|---|---|
+| primary (ember) | `#C2410C` (5.2:1 on white) | `#FF8A50` |
+| secondary (violet) | `#6D28D9` | `#B794F6` |
+| background | `#FFF8F4` | `#120B18` |
+| hero gradient | `#3B0764 → #C2410C` | `#2E0752 → #B23A0C` |
+
+`#F97316` (bright ember) is 2.8:1 on white — decorative only (icon, splash, dots). All text pairs
+≥ 4.5:1. System fonts (proper Arabic shaping for free); ticking numbers use `tabular-nums` so a
+changing digit never shifts its neighbours. 4/8 dp spacing, 48 dp touch targets, body ≥ 16.
+
+**Per-countdown colors** ([`countdownColors.ts`](./src/theme/countdownColors.ts)): nine palettes
+(ember, violet, ocean, teal, rose, forest, indigo, gold, graphite), each a dark→mid gradient whose
+both ends carry white text at ≥ 4.5:1 (the hero card and the widget), plus light/dark accents and
+soft badge backgrounds. The widget draws the same gradients natively — keep `WidgetColors.kt` in sync.
+
+**App icon**: original — a gold countdown ring three-quarters done (with a white knob) around a
+white calendar page (ember header, one day marked), on the dusk tile (`#3B0764 → #C2410C`).
+Geometry lives in **two places that must stay in sync**: [`AppLogo.tsx`](./src/components/brand/AppLogo.tsx)
+and [`scripts/generate-icons.js`](./scripts/generate-icons.js) (writes `assets/brand/*.svg` + every
+Android/iOS icon; the Android 13 themed icon draws the page as an outline). Native splash is
+regenerated from `assets/brand/splash-logo.svg` (command in help.md).
+
 ## Known gotchas (inherited from the Hijri converter — all still apply)
 
 - **RN CLI init bugs**: Kotlin sources landed in `java/com/com.devlance.dayscounter/` (moved to

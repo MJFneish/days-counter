@@ -1,28 +1,88 @@
 /**
  * Days Counter — countdowns to the dates that matter, with a home-screen widget.
- * Scaffold placeholder; the real app shell lands in the next version.
  * @format
  */
-import React from 'react';
-import { StatusBar, StyleSheet, Text, View } from 'react-native';
+import './src/i18n';
+
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { StatusBar } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { DarkTheme, DefaultTheme, NavigationContainer, type Theme } from '@react-navigation/native';
+import BootSplash from 'react-native-bootsplash';
+
+import { LoadingScreen } from './src/components/LoadingScreen';
+import { ToastHost } from './src/components/Toast';
+import { useClockDriver } from './src/hooks/useClock';
+import { RootNavigator } from './src/navigation/RootNavigator';
+import { useCountdownStore } from './src/store/useCountdownStore';
+import { useSettingsStore } from './src/store/useSettingsStore';
+import { useTheme } from './src/theme/useTheme';
+
+// The loading screen stays up at least this long even when hydration is instant — a flash reads
+// as a glitch, not as speed (same reasoning and value as the sibling apps).
+const MIN_LOADING_VISIBLE_MS = 1200;
+
+function AppContent() {
+  const settingsReady = useSettingsStore(s => s.hasHydrated);
+  const countdownsReady = useCountdownStore(s => s.hasHydrated);
+  const showSeconds = useSettingsStore(s => s.showSeconds);
+  const hasHydrated = settingsReady && countdownsReady;
+  const { colors, isDark } = useTheme();
+  const [showLoading, setShowLoading] = useState(true);
+  const mountedAt = useRef(Date.now());
+
+  useClockDriver(showSeconds);
+
+  useEffect(() => {
+    if (!hasHydrated) return;
+    const remaining = MIN_LOADING_VISIBLE_MS - (Date.now() - mountedAt.current);
+    const id = setTimeout(() => setShowLoading(false), Math.max(0, remaining));
+    return () => clearTimeout(id);
+  }, [hasHydrated]);
+
+  // The JS loading screen's first frame matches the native splash, so swap them without a fade.
+  const hideNativeSplash = useCallback(() => {
+    BootSplash.hide({ fade: false }).catch(() => {});
+  }, []);
+
+  const navTheme = useMemo<Theme>(() => {
+    const base = isDark ? DarkTheme : DefaultTheme;
+    return {
+      ...base,
+      colors: {
+        ...base.colors,
+        primary: colors.primary,
+        background: colors.background,
+        card: colors.surface,
+        text: colors.text,
+        border: colors.border,
+        notification: colors.primary,
+      },
+    };
+  }, [isDark, colors]);
+
+  return (
+    <>
+      {/* Edge-to-edge (RN 0.87 default): only the icon style is ours to set. */}
+      <StatusBar barStyle={showLoading || isDark ? 'light-content' : 'dark-content'} />
+      {hasHydrated && (
+        <NavigationContainer theme={navTheme}>
+          <RootNavigator />
+        </NavigationContainer>
+      )}
+      <ToastHost />
+      {showLoading && <LoadingScreen onReady={hideNativeSplash} />}
+    </>
+  );
+}
 
 export default function App() {
   return (
-    <GestureHandlerRootView style={styles.root}>
+    <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <StatusBar barStyle="light-content" />
-        <View style={styles.center}>
-          <Text style={styles.title}>Days Counter</Text>
-        </View>
+        <AppContent />
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }
-
-const styles = StyleSheet.create({
-  root: { flex: 1 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#0E1530' },
-  title: { color: '#FFFFFF', fontSize: 28, fontWeight: '700' },
-});

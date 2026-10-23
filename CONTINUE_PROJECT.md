@@ -30,6 +30,7 @@ pinned countdown. EN/AR (RTL), light/dark, offline. Built on 2026-10-23 from an 
 
 - v0.1.0: scaffold, configs, patches, bump + release scripts, docs.
 - v0.2.0: countdown engine (calendar-day, DST-safe) + 19 Jest tests, stores, EN/AR strings.
+- v0.3.0: Dusk theme, tab pager, icon, native splash → animated loader, shared clock, first Settings.
 - See `TODO.md` for the rest.
 
 ## Next steps a fresh session might be asked for

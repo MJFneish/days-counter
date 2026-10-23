@@ -24,12 +24,14 @@ version (tag + GitHub release, pushed to `develop`).
 - [x] i18n EN/AR strings for the whole app
 - [x] Jest tests in `Asia/Beirut` (DST crossings, every midnight flip, leap day, past dates)
 
-## Phase 3 — App shell, brand, loader (v0.3.0)
-- [ ] Theme "Dusk" light/dark/system, spacing/typography tokens, i18n EN/AR, `useDirection`
-- [ ] Root stack + live-drag tab pager (Home / Settings, mirrors in Arabic)
-- [ ] Original app icon (Android legacy + adaptive + monochrome, iOS 1024) via `scripts/generate-icons.js`
-- [ ] Native splash (bootsplash) → animated JS loading screen (seamless hand-off, min 1.2 s,
-      reduced-motion aware)
+## Phase 3 — App shell, brand, loader (v0.3.0) ✅ (typecheck clean)
+- [x] Theme "Dusk" light/dark/system (ui-ux-pro-max), per-countdown palettes, spacing/typography
+      tokens, `useDirection`, one shared clock (`useClock`)
+- [x] Root stack + live-drag tab pager (Home / Settings, mirrors in Arabic)
+- [x] Original app icon (Android legacy + adaptive + monochrome, iOS 1024) via `scripts/generate-icons.js`
+- [x] Native splash (bootsplash, Android + iOS) → animated JS loading screen (seamless hand-off,
+      min 1.2 s, reduced-motion aware)
+- [x] Settings: language, appearance, about (the rest lands in Phase 5); Home placeholder
 
 ## Phase 4 — Home (v0.4.0)
 - [ ] Hero card for the pinned countdown: live days / hours / minutes / seconds tiles, target

@@ -61,6 +61,22 @@ Updates `package.json` (source of truth — Settings → About shows it), `andro
 
 ---
 
+## 🎨 Icons & splash
+
+```bash
+node scripts/generate-icons.js     # launcher icons (Android legacy/adaptive/monochrome + iOS 1024) + assets/brand/*.svg
+
+# native splash, from the emblem the script above writes
+yarn react-native-bootsplash generate assets/brand/splash-logo.svg \
+  --platforms=android,ios --background=170B26 --logo-width=120 --assets-output=assets/bootsplash
+```
+
+Keep `--background` equal to `brand.night` and `--logo-width` equal to `LOGO_SIZE` in
+`src/components/LoadingScreen.tsx`, or the native → JS hand-off visibly jumps. The generator
+re-writes `AndroidManifest.xml` / `styles.xml` formatting — check `git diff` after running it.
+
+---
+
 ## 📦 Release APK file name
 
 Release APKs are named **`DaysCounter-<version>.apk`** in `android/app/build/outputs/apk/release/`

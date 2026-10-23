@@ -6,6 +6,7 @@ import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
 import com.facebook.react.defaults.DefaultReactActivityDelegate
 import com.swmansion.rnscreens.fragment.restoration.RNScreensFragmentFactory
+import com.zoontek.rnbootsplash.RNBootSplash
 
 class MainActivity : ReactActivity() {
 
@@ -25,6 +26,9 @@ class MainActivity : ReactActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     // react-native-screens >= 4.16: restore fragments through its own factory.
     supportFragmentManager.fragmentFactory = RNScreensFragmentFactory()
+    // Native splash (night background + emblem) until JS calls BootSplash.hide() — App.tsx hides
+    // it as soon as the matching JS LoadingScreen has laid out, so the hand-off is seamless.
+    RNBootSplash.init(this, R.style.BootTheme)
     super.onCreate(savedInstanceState)
   }
 }
