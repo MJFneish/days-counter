@@ -100,6 +100,23 @@ releases are marked pre-release. **Only the final release carries the APK** (use
   App.tsx) ticks a zustand store on whole seconds — whole minutes when "Show seconds" is off —
   aligned to the wall clock, and stops in the background. Every countdown reads `useNow()`, so
   they all tick together. Don't add per-component intervals.
+- **Home** ([`HomeScreen.tsx`](./src/screens/HomeScreen.tsx)): header (today's date + round "+"
+  button) → [`HeroCountdown`](./src/components/home/HeroCountdown.tsx) for the **pinned**
+  countdown (its gradient, big day count, H/M/S tiles whose digits slide in on change, progress of
+  the wait since the countdown was created, "The day is here!" on the day) →
+  [`StatsCard`](./src/components/home/StatsCard.tsx) (same wait on the calendar / in weeks / in
+  hours) → every other countdown as a [`CountdownRow`](./src/components/home/CountdownRow.tsx)
+  (headline number drops to hours/minutes on the last day; pin button moves it to the hero +
+  widget). The list re-sorts only when a countdown passes, not every second. Empty state when
+  nothing is left. A countdown with no name shows its date as the title
+  ([`present.ts`](./src/core/present.ts)).
+- **Editor** ([`CountdownEditor.tsx`](./src/components/editor/CountdownEditor.tsx)): one bottom
+  sheet for add + edit — live preview in the chosen gradient, name (optional, 40 chars), date
+  wheels (1900–2100, day clamped to the month) and time wheels (12/24 h per Settings) from
+  [`DateTimeWheels`](./src/components/picker/DateTimeWheels.tsx) on the Hijri converter's
+  `WheelPicker`, 9 colors, 12 icons, "show on the widget", delete (confirm). A new countdown
+  defaults to one month ahead at 00:00 in the first unused color, pinned if none is. A past date
+  is allowed (note shown) — it counts up.
 - **Loading**: bootsplash (night `#170B26`, 120 dp emblem) → `LoadingScreen`, whose first frame is
   identical (emblem drawn with `arc={false}` + a separate `ArcLayer` at rest), so
   `BootSplash.hide({ fade: false })` is invisible; then the gold arc spins, glows drift, sparks

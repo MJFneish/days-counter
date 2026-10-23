@@ -33,12 +33,14 @@ version (tag + GitHub release, pushed to `develop`).
       min 1.2 s, reduced-motion aware)
 - [x] Settings: language, appearance, about (the rest lands in Phase 5); Home placeholder
 
-## Phase 4 — Home (v0.4.0)
-- [ ] Hero card for the pinned countdown: live days / hours / minutes / seconds tiles, target
-      date, progress bar, breakdown line, "it's today" / "since" states
-- [ ] List of the other countdowns (days left, mini progress), tap to open, pin from the list
-- [ ] Add / edit sheet: title, date wheels, time wheels, color, icon, pin toggle; delete with confirm
-- [ ] Empty state
+## Phase 4 — Home (v0.4.0) ✅ (typecheck clean)
+- [x] Hero card for the pinned countdown: live days / hours / minutes / seconds tiles, target
+      date, progress bar, "The day is here!" / count-up states
+- [x] "The wait in numbers" card (calendar span, weeks, total hours)
+- [x] List of the other countdowns (headline number, mini progress), tap to edit, pin from the list
+- [x] Add / edit sheet: live preview, name, date wheels, time wheels, color, icon, pin toggle;
+      delete with confirm; toasts
+- [x] Empty state
 
 ## Phase 5 — Settings (v0.5.0)
 - [ ] Language, appearance (follow system + light/dark tiles)
