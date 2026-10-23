@@ -36,6 +36,8 @@ pinned countdown. EN/AR (RTL), light/dark, offline. Built on 2026-10-23 from an 
 - v0.6.0: Settings — countdown options, widget section (picker, add widget), delete all.
 - v1.0.0: full test (27 tests, typecheck, lint, release build, emulator walk-through) and its
   fixes — sheets off RN Modal, hero label, widget digits. APK attached to the GitHub release.
+- v1.0.1: release-script fix only (stream large uploads); the app is the same as 1.0.0. Both
+  releases carry the universal APK.
 - **Not verified**: a physical phone, lock-screen placement (needs a device that allows it), the
   exact-alarm path on Android 13+ with "Alarms & reminders" granted, iOS (no macOS here).
 - See `TODO.md` for the rest.

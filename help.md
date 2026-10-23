@@ -42,8 +42,9 @@ yarn release --dry-run                   # preview
 ```
 
 `yarn release` uses the GitHub token Git already stores (`git credential fill`) — `gh` isn't
-installed on this machine. It updates the release if it already exists, and marks 0.x versions as
-pre-releases.
+installed on this machine. It updates the release if it already exists (re-running it with
+`--asset` replaces a same-named file), and marks 0.x versions as pre-releases. The APK is streamed
+with `https.request` — Node's `fetch` timed out on the ~80 MB universal APK.
 
 ### Version bump details
 
