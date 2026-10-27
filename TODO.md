@@ -37,11 +37,14 @@ app build, UI smoke test + screenshots).
       branches for getting iOS code to compile
 - [x] Locale key-parity test in both apps
 
-## v2 Phase 3 — Countdown engine, both apps (2.0.0-alpha.3)
-- [ ] `core/`: `remaining` (calendar days, DST-safe, JS-Date semantics incl. the repeated hour),
-      progress, calendar span, phrases (EN + Arabic 6 forms), date/time formats, titles
-- [ ] `Strings` over the shared i18next JSON, `{{placeholders}}`
-- [ ] Every v1 Jest test ported to JUnit and XCTest, in Asia/Beirut
+## v2 Phase 3 — Countdown engine, both apps (2.0.0-alpha.3) ✅
+- [x] `core/` in Kotlin and Swift: `remaining` (calendar days, DST-safe), progress, calendar span,
+      phrases (EN + Arabic forms), date/time formats, titles, relative phrases
+- [x] Own day-number + UTC-offset arithmetic (`wallToInstant`) in both, so a DST-skipped time
+      moves forward and a repeated one takes its first occurrence — identical on both platforms
+- [x] `Strings` over the shared i18next JSON, `{{placeholders}}`, English fallback
+- [x] Every v1 Jest test ported to JUnit (28 with the locale test) and XCTest (same cases), in
+      Asia/Beirut, plus skipped/repeated-hour and day-number round-trip tests
 
 ## v2 Phase 4 — Data, theme, shell, Settings, both apps (2.0.0-alpha.4)
 - [ ] Stores (countdowns + settings), sanitized on load; seed 5 Sep 2027 once

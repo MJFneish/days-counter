@@ -16,7 +16,7 @@ settings:
     # Keep in step with android/version.properties (`yarn bump` in android/ updates both; iOS gets
     # the version without its "-alpha.N" suffix, the build number tells those apart).
     MARKETING_VERSION: "2.0.0"
-    CURRENT_PROJECT_VERSION: "101"
+    CURRENT_PROJECT_VERSION: "102"
     SWIFT_VERSION: "5.9"
     DEVELOPMENT_TEAM: ""
     CODE_SIGN_STYLE: Automatic

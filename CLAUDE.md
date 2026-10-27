@@ -87,30 +87,45 @@ option. Build APKs locally (`yarn build:apk` in `android/`) and hand over the pa
 
 ## Countdown engine — read before touching either app's `core/`
 
+Kotlin: `android/app/src/main/java/com/devlance/dayscounter/core/` (`Model`, `Time`, `Remaining`,
+`Format`, `Plural`, `Phrases`) + `i18n/Strings.kt`. Swift: the same file names in
+`ios/DaysCounterCore/Sources/DaysCounterCore/`. **A port of v1's `src/core/` + `src/i18n/plural.ts`;
+the two apps run the same algorithms — change both together, with their tests.**
+
 - A countdown stores its target as a **wall-clock `LocalDateTime`** (`{year, month, day, hour,
   minute}`, device time zone), never an epoch — "5 Sep 2027 00:00" stays local midnight even if
-  the phone changes time zone. `toInstant()` resolves it with `new Date(y, m-1, d, h, min)`.
-- [`remaining(target, now)`](./src/core/countdown.ts) counts **calendar days anchored to the
-  target's time of day**: `days` = the largest d with "target − d calendar days" ≥ now. A midnight
-  countdown therefore flips its day count at local midnight, also across DST — counting 24-hour
-  blocks would flip it at 23:00 or 01:00 for half the year. The H/M/S part is the physical time to
-  that next flip (`nextChangeAt`), so on a DST day it can read up to 24:59:59 / start at 22:59:59.
-  A skipped midnight (Lebanon springs forward 00:00 → 01:00) resolves to 01:00.
+  the phone changes time zone.
+- **No platform calendar in the engine.** Dates are day numbers (`epochDay` / `dateOfEpochDay`,
+  Hinnant's civil-day algorithms) plus the zone's UTC offset; `wallToInstant` resolves a wall time
+  from the offsets a day before and after it. A time a DST change **skips** moves forward by the
+  gap (Beirut 28 Mar 2027 00:30 → 01:30); one it **repeats** takes the **first** occurrence — JS
+  `Date`'s rules (what v1 used) and java.time's. `java.util.Calendar` and Foundation's `Calendar`
+  disagree with each other on those cases, which is why neither is used.
+- `remaining(target, now)` counts **calendar days anchored to the target's time of day**: `days` =
+  the largest d with "target − d calendar days" ≥ now. A midnight countdown therefore flips its day
+  count at local midnight, also across DST — counting 24-hour blocks would flip it at 23:00 or
+  01:00 for half the year. The H/M/S part is the physical time to that next flip (`nextChangeAt`),
+  so on a DST day it can read up to 24:59:59 / start at 22:59:59. `boundaryAt` is the last flip
+  when counting up (the widget counts up from it).
 - Seconds are **truncated**, like Android's `Chronometer`, so the app and the widget tick together.
-- After the target: `arrived` for the first day (the "The day is here!" state), then `past`, both
+- After the target: `ARRIVED` for the first day (the "The day is here!" state), then `PAST`, both
   counting up the same way. Settings → "Count up after the date" can hide the count-up.
 - `calendarSpan` = the most whole months that fit (clamped to month ends: 31 Jan → 1 Mar is
-  "1 month and 1 day"), then leftover days — computed in UTC day numbers, free of DST.
-- Counted phrases ("10 months and 12 days", "١٠ أشهر و١٢ يومًا") come from
-  [`src/i18n/plural.ts`](./src/i18n/plural.ts), **not** i18next plurals — those need
-  `Intl.PluralRules`, which Hermes doesn't reliably provide, and Arabic needs 6 CLDR forms.
+  "1 month and 1 day"), then leftover days — in day numbers, free of DST.
+- Counted phrases ("10 months and 12 days", "١٠ أشهر و١٢ يومًا") come from `Plural`, with Arabic's
+  forms spelled out (one/two/few/many/other, 0 → "٠ يوم") rather than platform plural rules.
   `unitWord()` gives the bare noun for a label under a big number ("يومًا", "دقائق").
-- Arabic UI shows Arabic-Indic digits via `localizeDigits()`; Gregorian month names are Levantine
-  (كانون الثاني…), as Lebanese calendars print them.
-- Tests: [`countdown.test.ts`](./src/core/__tests__/countdown.test.ts) runs in **Asia/Beirut**
-  (`jest.globalSetup.js` sets `TZ`), covering the user's example (23 Oct 2026 15:00 → 316 days
-  9:00:00 to 5 Sep 2027), every midnight flip on the way, both 2026/27 DST changes, leap day,
-  arrived/past, spans and both languages' phrases.
+- Arabic UI shows Arabic-Indic digits via `localizeDigits()` (by hand — Android's `ar` locale
+  formats with Latin digits); Gregorian month names are Levantine (كانون الثاني…), as Lebanese
+  calendars print them.
+- Texts: `Strings.of(lang)` over the shared i18next JSON (dot keys, `{{name}}` placeholders,
+  English fallback) — the app's language is its own setting, independent of the phone's.
+- Tests run in **Asia/Beirut** (JUnit: `TimeZone.setDefault`; XCTest: `TimeZones.override`):
+  `CountdownTest` / `CountdownTests` (the user's example 23 Oct 2026 15:00 → 316 days 9:00:00 to
+  5 Sep 2027, every midnight flip on the way, both 2026/27 DST changes, the skipped and repeated
+  hour, leap day, arrived/past, spans, day-number round trip 1899–2101) and `PhrasesTest` /
+  `PhrasesTests` (both languages' phrases, titles, relative phrases, Strings) — v1's Jest cases
+  plus the DST semantics.
 
 ### Stores
 

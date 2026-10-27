@@ -41,8 +41,9 @@ in 2.0.0-alpha.2 (git history, tag `v1.0.2`).
   project, `DaysCounterCore` package, SwiftUI skeleton, launch screen, icon, UI smoke test), CI on
   GitHub Actions (Android tests, i18n copies identical, iOS swift test + app build + UI test with
   screenshots). v1 removed.
-- Next: the countdown engine in both apps (alpha.3), then data/shell/Settings, Home, editor,
-  widgets, 2.0.0 — see `TODO.md`.
+- 2.0.0-alpha.3: the countdown engine in Kotlin and Swift (same algorithms, own DST-exact
+  day arithmetic) with v1's Jest cases as JUnit + XCTest suites.
+- Next: data/theme/shell/Settings (alpha.4), Home, editor, widgets, 2.0.0 — see `TODO.md`.
 - Coordination: another Claude session converts the Hijri converter the same way and uses the
   Pixel_7 emulator on port 5560; this project uses Pixel_8a on 5554.
 
