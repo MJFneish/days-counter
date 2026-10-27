@@ -2,8 +2,8 @@
 /**
  * Bumps the app version of both apps. Source of truth: android/version.properties (VERSION_NAME +
  * VERSION_CODE), read by android/app/build.gradle.kts and scripts/github-release.js; the iOS app
- * ships the same version, so ios/project.yml (MARKETING_VERSION + CURRENT_PROJECT_VERSION) is
- * updated with it. Same script as Mawakit's (prayer-times-lb). Run in android/.
+ * ships the same version, so ios/project.yml (MARKETING_VERSION + CURRENT_PROJECT_VERSION +
+ * APP_VERSION_NAME, the full name shown in About) is updated with it. Same script as Mawakit's (prayer-times-lb). Run in android/.
  *
  * Usage:
  *   yarn bump             -> build number only (VERSION_CODE + 1)
@@ -79,7 +79,8 @@ if (fs.existsSync(iosProject)) {
     yml
       // iOS only accepts "x.y.z" here; the build number tells the alphas apart.
       .replace(/^(\s*MARKETING_VERSION:\s*).*$/m, `$1"${newVersion.split('-')[0]}"`)
-      .replace(/^(\s*CURRENT_PROJECT_VERSION:\s*).*$/m, `$1"${newCode}"`),
+      .replace(/^(\s*CURRENT_PROJECT_VERSION:\s*).*$/m, `$1"${newCode}"`)
+      .replace(/^(\s*APP_VERSION_NAME:\s*).*$/m, `$1"${newVersion}"`),
   );
   console.log(`updated ${path.relative(root, iosProject)}`);
 }

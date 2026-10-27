@@ -16,7 +16,9 @@ settings:
     # Keep in step with android/version.properties (`yarn bump` in android/ updates both; iOS gets
     # the version without its "-alpha.N" suffix, the build number tells those apart).
     MARKETING_VERSION: "2.0.0"
-    CURRENT_PROJECT_VERSION: "102"
+    CURRENT_PROJECT_VERSION: "103"
+    # The full version name ("2.0.0-alpha.4"), shown in Settings → About as on Android.
+    APP_VERSION_NAME: "2.0.0-alpha.4"
     SWIFT_VERSION: "5.9"
     DEVELOPMENT_TEAM: ""
     CODE_SIGN_STYLE: Automatic
@@ -39,6 +41,7 @@ targets:
         CFBundleDisplayName: Days Counter
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        DCVersionName: $(APP_VERSION_NAME)
         CFBundleLocalizations: [en, ar]
         UILaunchScreen:
           UIColorName: LaunchBackground

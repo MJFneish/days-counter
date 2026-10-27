@@ -43,7 +43,10 @@ in 2.0.0-alpha.2 (git history, tag `v1.0.2`).
   screenshots). v1 removed.
 - 2.0.0-alpha.3: the countdown engine in Kotlin and Swift (same algorithms, own DST-exact
   day arithmetic) with v1's Jest cases as JUnit + XCTest suites.
-- Next: data/theme/shell/Settings (alpha.4), Home, editor, widgets, 2.0.0 — see `TODO.md`.
+- 2.0.0-alpha.4: stores + v1 import (Android), Dusk theme, instant RTL, icons, emblem, loading
+  screen, clock, tabs, Settings — on both apps (Android checked on the emulator, iOS by the CI UI
+  test's screenshots).
+- Next: the real Home (alpha.5), the editor (alpha.6), widgets (alpha.7), 2.0.0 — see `TODO.md`.
 - Coordination: another Claude session converts the Hijri converter the same way and uses the
   Pixel_7 emulator on port 5560; this project uses Pixel_8a on 5554.
 

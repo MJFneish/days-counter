@@ -7,6 +7,7 @@
     "bump": "node scripts/bump-version.js",
     "build:apk": "node scripts/build-apk.js",
     "release": "node scripts/github-release.js",
-    "build:icons": "node scripts/generate-icons.js"
+    "build:icons": "node scripts/generate-icons.js",
+    "build:lucide": "node scripts/build-lucide.js"
   }
 }

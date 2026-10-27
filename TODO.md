@@ -46,14 +46,17 @@ app build, UI smoke test + screenshots).
 - [x] Every v1 Jest test ported to JUnit (28 with the locale test) and XCTest (same cases), in
       Asia/Beirut, plus skipped/repeated-hour and day-number round-trip tests
 
-## v2 Phase 4 — Data, theme, shell, Settings, both apps (2.0.0-alpha.4)
-- [ ] Stores (countdowns + settings), sanitized on load; seed 5 Sep 2027 once
-- [ ] Android: first-launch import of v1's AsyncStorage (`RKStorage` SQLite) — countdowns, pin,
-      settings (iOS v1 never shipped: nothing to import)
-- [ ] Dusk theme (light/dark/system), instant RTL, Lucide icons, the emblem drawn in code,
-      animated loading screen, one shared clock
-- [ ] Tabs (Home / Settings) mirrored in Arabic; Settings: language, appearance, countdown
-      options, delete all, about
+## v2 Phase 4 — Data, theme, shell, Settings, both apps (2.0.0-alpha.4) ✅
+- [x] Stores (countdowns + settings) as v1-shaped JSON — SharedPreferences / App Group
+      UserDefaults — sanitized on load; seed 5 Sep 2027 once (9 store tests on each platform)
+- [x] Android: first-launch import of v1's AsyncStorage (`RKStorage` SQLite) — countdowns, pin,
+      settings; checked on the emulator with an Arabic/dark/2-countdown v1 database
+      (iOS v1 never shipped: nothing to import)
+- [x] Dusk theme (light/dark/system), instant RTL, icons (Lucide generated for Android, SF Symbols
+      on iOS), the emblem drawn in code, animated loading screen, one shared clock
+- [x] Tabs (Home / Settings; Android pager mirrored in Arabic); Settings: language, appearance,
+      countdown options, delete all (confirm + toast), about with the full version
+- [x] Home: a first version listing the countdowns (the real Home is phase 5)
 
 ## v2 Phase 5 — Home, both apps (2.0.0-alpha.5)
 - [ ] Hero (live D/H/M/S, digits slide in, progress, arrived / count-up), stats card, list rows

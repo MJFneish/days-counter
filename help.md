@@ -47,6 +47,19 @@ uses the emulator first.
 `v1.0.2` tag if needed. Install it, then `adb install -r` the v2 APK over it — same id and key, so
 it must install as an update and import v1's countdowns and settings on first launch.
 
+Without a v1 APK, plant a v1 database instead (debug build): pull/edit/push
+`databases/RKStorage` (SQLite, table `catalystLocalStorage`, keys `days-counter-settings` /
+`days-counter-countdowns`, values `{"state": {...}, "version": 0}`), delete
+`shared_prefs/days_counter.xml`, and launch:
+
+```bash
+adb -s emulator-5554 push RKStorage /data/local/tmp/RKStorage
+adb -s emulator-5554 shell "run-as com.devlance.dayscounter sh -c 'rm -f shared_prefs/days_counter.xml; cp /data/local/tmp/RKStorage databases/RKStorage'"
+```
+
+**iOS UI-test hooks** (launch environment): `DAYS_COUNTER_RESET=1` (fresh data),
+`DAYS_COUNTER_LANGUAGE=en|ar`, `DAYS_COUNTER_THEME=system|light|dark`.
+
 ---
 
 ## 🍎 iOS (`ios/`) — built on GitHub Actions (no Mac here)
@@ -134,7 +147,11 @@ adb -s emulator-5554 shell cmd appops set com.devlance.dayscounter SCHEDULE_EXAC
 cd android
 yarn add --dev sharp       # once — the icon generator's only dependency, not kept installed
 yarn build:icons           # Android launcher icons + splash emblem, iOS app icon + launch logo
+yarn build:lucide          # Android's Lucide icon paths (ui/icons/LucideIcons.kt) from lucide-static 1.60.0 — no install needed
 ```
+
+Android draws v1's Lucide icons; to add one, put its Lucide name in `scripts/build-lucide.js` and
+re-run `yarn build:lucide`. The iOS app uses SF Symbols.
 
 The emblem's geometry is also drawn in code (the Settings → About logo and the loading screen) —
 keep `android/scripts/generate-icons.js` and the two `AppLogo` files in sync.
