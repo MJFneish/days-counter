@@ -1,78 +1,91 @@
 # Days Counter (عدّاد الأيام) — countdowns + a resizable home-screen widget
 
 Counts down to the dates that matter — days, hours, minutes and seconds, ticking live — with a
-**resizable Android home-screen widget** for the pinned countdown. Bilingual (English / Arabic
-with RTL), light and dark themes, fully offline. Two tabs (Home + Settings) and an animated
-loading screen.
+**resizable home-screen widget** for the pinned countdown. Bilingual (English / Arabic with RTL),
+light and dark themes, fully offline. Two tabs (Home + Settings) and an animated loading screen.
+
+**Two native apps, one folder each** (the same layout as Mawakit / prayer-times-lb):
+[`android/`](./android/) — Kotlin + Jetpack Compose — and [`ios/`](./ios/) — Swift + SwiftUI.
+**Every feature is built on both** (the user's standing rule for `D:\workspace\me` projects with
+both folders, and their answer for this conversion on 2026-10-27). v1, a bare React Native CLI app,
+was removed in 2.0.0-alpha.2; it is in git history (tag `v1.0.2`).
 
 See [`CONTINUE_PROJECT.md`](./CONTINUE_PROJECT.md) for a handoff snapshot if you're picking this up
 fresh, [`TODO.md`](./TODO.md) for the phased checklist (source of truth for "what's done"), and
 [`help.md`](./help.md) for the command cheat sheet.
 
 **Project skills** (`.claude/skills/`) — check these before the matching kind of work:
-- `verify` — **read before running `yarn test:native` / a Gradle build / an emulator check.**
+- `verify` — **read before running unit tests, a Gradle build, an emulator check or the iOS CI job.**
 
-## v2: the native Android app — read first
+## The v2 conversion (2026-10-27)
 
-Since 2.0.0 (alphas from 2026-10-27) the app is **native Kotlin + Jetpack Compose in
-[`native/`](./native/)** — no React Native — converted the same way as Mawakit (prayer-times-lb's
-v2). The React Native app in `android/`, `ios/`, `src/`, `App.tsx` is **v1**, kept in the repo until
-the user asks to remove it; the sections further down describe v1, and the engine/feature rules
-there still hold — v2 ports them file for file into
-`native/app/src/main/java/com/devlance/dayscounter/`.
+The user asked to convert the app "like Mawakit" to native apps, starting at v2, one commit + tag
+per feature, tested carefully. Each phase ships as **2.0.0-alpha.N** on both platforms; **2.0.0**
+is the full test pass. The rules in "Countdown engine", "UI", "Widget" and "Design system" below
+are v1's behaviour, which both apps reproduce — `TODO.md` says which phases have landed. File
+names in those sections are v1's (TypeScript, in git history) unless a Kotlin/Swift path is given.
+
+## Android app (`android/`) — read first
 
 - **Toolchain** = Mawakit's, proven on this machine: Gradle 9.3.1 wrapper, AGP 8.12.0, Kotlin
   2.2.10, Compose BOM 2025.08.00, compileSdk/targetSdk 36, minSdk 24, JDK 17 target. No
   `java.time` (needs API 26 or desugaring, whose library isn't in the offline Gradle cache) —
   dates go through `java.util.Calendar`.
 - **Updating over v1 must keep working:** same application id (`com.devlance.dayscounter`), same
-  signing key (`native/app/debug.keystore` = v1's RN template key, the public Android debug key),
-  same launcher activity (`.MainActivity`). Android only — v2 has no iOS app.
-- **Versions:** `native/version.properties` (`yarn bump patch|minor|major|pre|release`); v2 build
-  numbers start at 100 (v1 ended at 9). `yarn release` reads that file; `-alpha` versions are
-  GitHub pre-releases. `package.json`'s version (1.0.2) is v1's and no longer bumped.
+  signing key (`android/app/debug.keystore` = v1's RN template key, the public Android debug key),
+  same launcher activity (`.MainActivity`). Checked on the emulator: 1.0.1 → 2.0.0-alpha.1 installs
+  as an update, and v1's AsyncStorage database (`databases/RKStorage`, table
+  `catalystLocalStorage`, keys `days-counter-countdowns` / `days-counter-settings`, values
+  `{"state": {...}, "version": 0}`) and the widget's `shared_prefs/days_widget.xml` survive.
 - **Splash:** AndroidX SplashScreen (`Theme.App.SplashScreen`) shows v1's bootsplash emblem
   (`drawable-*/splash_emblem.png`: 288 dp canvas, 120 dp emblem) on `#170B26`.
+- **Strings** are v1's i18next files as assets (`android/app/src/main/assets/i18n/`), identical to
+  the iOS copies (CI compares them).
+- **Tooling** lives in `android/package.json` (Node built-ins, nothing to install, run in
+  `android/`): `yarn test`, `yarn bump`, `yarn build:apk` (→ `android/dist/`), `yarn release`,
+  `yarn build:icons` (needs `sharp`, see help.md).
+
+## iOS app (`ios/`) — read first
+
+- **No Mac on this machine.** The iOS app is compiled and tested on GitHub's macOS runners — the
+  `ios` job in `.github/workflows/ci.yml`: `swift test` in `ios/DaysCounterCore`, then XcodeGen +
+  `xcodebuild test` (app build + UI smoke test on the newest iPhone simulator), screenshots in the
+  `ios-screenshots` artifact. The repo is public, so macOS minutes are free — but each run takes
+  several minutes: fix every compile error from one log in one round.
+- **Get iOS code compiling on a scratch branch** (`ci/<something>`, which CI also runs) — not on
+  `develop`, where every commit is a version. Once green, fast-forward `develop` to it, tag, push,
+  and delete the scratch branch.
+- **Layout:** `project.yml` (XcodeGen; `DaysCounter.xcodeproj` and the Info.plists are generated,
+  not committed), `DaysCounterCore/` (Swift package: engine + app logic + their XCTest suites, and
+  the i18n JSON in `Resources/`), `DaysCounter/` (the SwiftUI app), `DaysCounterUITests/` (the UI
+  smoke test that saves screenshots). Bundle id `com.devlance.dayscounter`, iOS 17+, iPhone,
+  portrait, Swift 5.9 language mode.
+- **Versions:** `yarn bump` (in `android/`) writes `ios/project.yml` too — `MARKETING_VERSION` is the
+  version without its `-alpha.N` suffix (iOS only accepts x.y.z), `CURRENT_PROJECT_VERSION` the
+  shared build number.
+- **Launch screen:** `UILaunchScreen` with `LaunchBackground` (`#170B26`) + `LaunchLogo` (the 120 pt
+  emblem) — the same picture as Android's splash. App icon = v1's 1024 px icon.
 
 ## Every commit = a version (user rule, 2026-10-23)
 
 The user asked for **each commit to carry its own app version, a GitHub tag and a release, and to
 be pushed to `develop`** (the repo's only branch). The routine, in this order:
 
-1. `yarn bump minor` (feature) / `yarn bump patch` (fix) — in the **same** commit as the work.
-   During the v2 conversion each phase is `yarn bump pre` (2.0.0-alpha.N), then
+1. `yarn bump minor` (feature) / `yarn bump patch` (fix), in `android/` — in the **same** commit
+   as the work. During the v2 conversion each phase is `yarn bump pre` (2.0.0-alpha.N), then
    `yarn bump release` for 2.0.0 once fully tested.
 2. `git commit` → `git tag -a v<version> -m "<version>"` → `git push origin develop --follow-tags`.
-3. `yarn release` → GitHub release titled `<version>` (notes = the commit message;
-   [`scripts/github-release.js`](./scripts/github-release.js), REST API with the token from
+3. `yarn release` (in `android/`) → GitHub release titled `<version>` (notes = the commit message;
+   [`android/scripts/github-release.js`](./android/scripts/github-release.js), REST API with the token from
    `git credential fill` — `gh` isn't installed; never print the token).
 
 Versions ran **0.1.0 (scaffold) → minor per feature → 1.0.0 = finished and fully tested**, then
 v2 **2.0.0-alpha.1 → alpha per phase → 2.0.0** (same idea). 0.x and `-alpha` releases are marked
 pre-release. **No APKs on GitHub** — the user said "do not upload the apk to
 github" (2026-10-23); the one briefly attached to 1.0.0 was removed and the script has no upload
-option. Build APKs locally (help.md) and hand over the path.
+option. Build APKs locally (`yarn build:apk` in `android/`) and hand over the path.
 
-## Stack
-
-- React Native **0.87.1** (New Architecture, Hermes), TypeScript — the exact native versions the
-  Hijri converter and lexitoon already build with on this machine (reanimated 4.6.0 + worklets
-  0.12.1, gesture-handler 3.2.1, screens 4.27.0, svg 15.15.5, safe-area-context 5.9.1).
-- **Yarn 1 (classic) only** — never npm.
-- Navigation: `@react-navigation/native` + `native-stack` for the root, and **prayer-times-lb's
-  live-drag tab pager** for Home/Settings (see "Tabs pager"). Native headers off everywhere.
-- State: `zustand` + `persist` over AsyncStorage — settings and countdowns.
-- i18n: `i18next` + `react-i18next`, device language via `react-native-localize`. RTL is
-  **JS-driven** through `useDirection` (instant switch, no restart), exactly like the sibling apps
-  — native `I18nManager` RTL is deliberately off, so every direction-sensitive layout mirrors
-  itself via `rowDirection` / `textAlign` / `isRTL`.
-- Animation: `react-native-reanimated` v4 (Babel plugin is `'react-native-worklets/plugin'`) +
-  `react-native-gesture-handler` (imported first in `index.js`).
-- Icons: `lucide-react-native` (SVG, one stroke family — no emoji icons).
-- Native splash: `react-native-bootsplash` → hands off to the animated JS `LoadingScreen`.
-- Relative imports (no path alias).
-
-## Countdown engine — read before touching `src/core/`
+## Countdown engine — read before touching either app's `core/`
 
 - A countdown stores its target as a **wall-clock `LocalDateTime`** (`{year, month, day, hour,
   minute}`, device time zone), never an epoch — "5 Sep 2027 00:00" stays local midnight even if
@@ -159,7 +172,7 @@ option. Build APKs locally (help.md) and hand over the path.
   twinkle, min 1.2 s (`MIN_LOADING_VISIBLE_MS` in `App.tsx`). Waits for both stores to hydrate.
   Respects reduced motion.
 
-## Android home-screen widget — read before touching `android/…/widget/`
+## Home-screen widget (v1's design — v2 keeps it minus the JS bridge)
 
 - **Bridge**: an app-local **Turbo Native Module** `DaysWidget`. Spec
   [`src/native/NativeDaysWidget.ts`](./src/native/NativeDaysWidget.ts) → codegen
@@ -234,72 +247,48 @@ and [`scripts/generate-icons.js`](./scripts/generate-icons.js) (writes `assets/b
 Android/iOS icon; the Android 13 themed icon draws the page as an outline). Native splash is
 regenerated from `assets/brand/splash-logo.svg` (command in help.md).
 
-## Known gotchas (inherited from the Hijri converter — all still apply)
+## Lessons from v1 that still apply
 
-- **RN CLI init bugs**: Kotlin sources landed in `java/com/com.devlance.dayscounter/` (moved to
-  `java/com/devlance/dayscounter/`) and `package.json` "name" was the package id (now `days-counter`).
-- RN 0.87 removed `StatusBar` `backgroundColor`/`translucent` (edge-to-edge is the default) and
-  `StyleSheet.absoluteFillObject` (use `StyleSheet.absoluteFill`).
-- **Never wrap `Pressable` with `Animated.createAnimatedComponent`** — it silently stops receiving
-  touches on RN 0.87 + Reanimated 4 + Fabric. Use `PressableScale` (plain Pressable, animated child).
-- Android draws by **elevation before zIndex** — an overlapping element needs a higher `elevation`.
-- `MainActivity.onCreate` uses `RNScreensFragmentFactory` (+ `RNBootSplash.init` once the splash
-  exists). Don't drop either.
-- **Windows 260-char path limit** in the New-Architecture codegen C++ build: `android/app/build.gradle`
-  pins `externalNativeBuild.cmake.version "3.31.6"` (Ninja 1.12, long-path aware). Don't remove it.
-- `.gitattributes` forces LF on `android/gradlew` and `patches/*.patch` (`core.autocrlf=true` here).
-- **Never size an `<Svg>` background with `width="100%"`** — on Android it doesn't follow its
-  parent as content grows. Use `GradientFill` (measures with onLayout).
-- **Don't toggle `backgroundColor` on a rounded view inside a ripple `Pressable`** for a selected
-  state (rendered square on Fabric) — keep a painted layer and toggle its `opacity`.
-- **No same-direction VirtualizedList inside a ScrollView** (the wheel picker is a plain ScrollView).
-- **patch-package** (`patches/`, applied by `postinstall`), same two patches as the Hijri app:
-  `react-native+0.87.1.patch` (adds `./src/private/*` to RN's `exports`, silences a Metro warning)
-  and `react-native-gesture-handler+3.2.1.patch` (lazy `DrawerLayoutAndroid`, silences a
-  deprecation warning on every launch). Re-check both when upgrading RN or gesture-handler.
-- RN 0.87's LogBox only says "Open debugger to view warnings" — read them with
-  `adb logcat -s ReactNativeJS:V`.
-- On Windows Metro can hang after `yarn add` rewrites `node_modules` — `yarn start --reset-cache`.
-- On Windows, run Gradle directly (`cd android && ./gradlew …`), not `yarn android`. See help.md.
-
-### Found on the first emulator run (Pixel 8a, API 36, 2026-10-23)
-
-- **RN `Modal` + edge-to-edge (RN 0.87) lays its content out short**: the Modal's content root
-  got the screen height minus the status and navigation bars (2216 of 2400 px) but was drawn from
-  y = 0. A sheet anchored to its bottom overflowed it, so the lower half of Save/Cancel was drawn
-  but not touchable — taps there fell through and closed the sheet. (uiautomator showed the
-  sheet's bounds ending at 2216.) Fixed by dropping `Modal` for `BottomSheet` + `SheetHost`
-  (above). The Hijri converter's `DatePickerSheet` uses the same Modal props — likely affected too.
-- The hero's "days to go" label sat beside the big number and, in Arabic, wrapped and lost a word
-  ("متبقٍّ"). It now sits under the number.
-- Widget: Android formats `ar` numbers with Latin digits — now mapped by hand (see the widget
-  section). The Chronometer's digits still follow the phone (no API to change them).
-- Verified working: loader → Home, live hero + tiles, stats, add (wheels, name, color), edit
-  (icon), delete (confirm, pin hand-over), pin from a row, Settings in EN/AR and light/dark,
-  "Add the widget" (launcher pin dialog with the preview), widget large → wide → square live while
-  resizing, widget re-colored/re-titled on pin change, Arabic widget plurals.
-- Tooling: with `adb shell …` in Git Bash, set `MSYS_NO_PATHCONV=1` or `/sdcard/…` paths get
-  rewritten. An emulator stuck as `unauthorized` after a snapshot boot came back with a cold boot
-  (`emulator -avd Pixel_8a -no-snapshot-load`).
+- **DST and calendar days**: never count a countdown in 24-hour blocks (see the engine section);
+  the tests run in `Asia/Beirut`, whose 2026/27 changes are at midnight.
+- **Arabic digits**: the app shows Arabic-Indic digits in Arabic; Android's `ar` locale formats
+  numbers with Latin digits, so digits are mapped by hand (the widget too). The widget's
+  `Chronometer` digits follow the phone's locale — no API to change them.
+- **Arabic labels wrap**: the hero's "days to go" label sits under the number, not beside it — side
+  by side it wrapped and lost a word in Arabic ("متبقٍّ").
+- **Sheets must cover the whole window** (v1's RN `Modal` laid its content out short under
+  edge-to-edge, making the bottom of Save/Cancel untouchable). Check the sheet's buttons are
+  tappable on a device after any sheet change.
+- **Emulator**: this project's AVD is **Pixel_8a on port 5554** (`emulator -avd Pixel_8a -port 5554`);
+  other sessions use other AVDs/ports — always `adb -s emulator-5554`. Git Bash: set
+  `MSYS_NO_PATHCONV=1` for `adb shell` paths. If every emulator shows `unauthorized`, the adb server
+  may be running under another account (session 0) — see help.md.
 
 ## Commands
 
 ```
-yarn install            # deps (Yarn 1 only)
-yarn start              # Metro
-yarn android            # build + install + run (or Gradle directly, see help.md)
-yarn test               # Jest
-yarn typecheck          # tsc --noEmit
-yarn lint               # eslint
-yarn bump [patch|minor|major] [--dry-run]   # version bump (package.json + build.gradle + pbxproj)
-yarn release [--dry-run]                    # GitHub release for the current version's tag (no APKs)
+# Android — in android/
+yarn test                # JVM unit tests (Gradle testDebugUnitTest)
+./gradlew assembleDebug  # debug APK
+yarn build:apk           # release APK -> android/dist/DaysCounter-v<version>-build<code>.apk
+yarn bump [patch|minor|major|pre|release] [--dry-run]   # android/version.properties + ios/project.yml
+yarn release [--dry-run]                                # GitHub release for the current version's tag (no APKs)
+
+# iOS — on the macOS CI runner (no Mac here)
+cd ios/DaysCounterCore && swift test
+cd ios && xcodegen generate && xcodebuild test -project DaysCounter.xcodeproj -scheme DaysCounter -destination 'platform=iOS Simulator,name=iPhone 16'
+gh run list --limit 5 ; gh run view <id> --log-failed ; gh run download <id> -n ios-screenshots
 ```
 
 ## Conventions to keep following
 
-- Yarn, not npm. Relative imports.
-- Every new direction-sensitive layout mirrors by hand via `useDirection()`.
-- New user-facing strings go in **both** `src/i18n/locales/en.json` and `ar.json`.
-- Colors only from theme tokens; icons only from lucide; touch targets ≥ 48 dp.
+- Every feature in **both** apps, tested on both (Android: unit tests + emulator; iOS: CI).
+- The same strings in both apps: edit `android/app/src/main/assets/i18n/*.json` and copy to
+  `ios/DaysCounterCore/Sources/DaysCounterCore/Resources/i18n/` (CI checks they're identical).
+  New user-facing strings go in **both** `en.json` and `ar.json`.
+- Every direction-sensitive layout mirrors in Arabic (instantly, from the app's language — not the
+  phone's).
+- Colors only from theme tokens; icons only from the Lucide set; touch targets ≥ 48 dp / 44 pt.
 - Keep `TODO.md` checkboxes current; keep this file current when a convention changes.
-- Every commit bumps the version, gets a tag + release, and is pushed (see the top section).
+- Every commit bumps the version, gets a tag + release, and is pushed (see the section above).
+- Yarn (never npm) for the helper scripts.

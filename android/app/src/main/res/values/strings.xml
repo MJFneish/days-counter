@@ -1,16 +1,3 @@
 <resources>
-    <string name="app_name">Days Counter</string>
-
-    <!-- Home-screen widget -->
-    <string name="widget_label">Days Counter</string>
-    <string name="widget_description">Your pinned countdown, ticking live</string>
-    <string name="widget_open_app">Open Days Counter to add a countdown</string>
-    <string name="widget_preview_title">Graduation day</string>
-    <string name="widget_preview_days">316</string>
-    <string name="widget_preview_unit">days to go</string>
-    <!-- The unit under the day count; the app's language is applied, not the phone's. -->
-    <plurals name="widget_days">
-        <item quantity="one">day</item>
-        <item quantity="other">days</item>
-    </plurals>
+  <string name="app_name">Days Counter</string>
 </resources>

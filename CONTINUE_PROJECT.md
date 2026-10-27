@@ -7,10 +7,11 @@ file's prose if they disagree.
 ## What this is
 
 **Days Counter / عدّاد الأيام** — counts down to dates (days, hours, minutes, seconds, live), with
-a resizable Android home-screen widget for the pinned countdown. EN/AR (RTL), light/dark, offline.
+a resizable home-screen widget for the pinned countdown. EN/AR (RTL), light/dark, offline.
 Built on 2026-10-23 as a bare React Native CLI app (v1, `MJFneish/days-counter`, branch
-`develop`); **since 2026-10-27 being converted to a native Kotlin + Jetpack Compose app in
-`native/` (v2)**, the same way as Mawakit (prayer-times-lb). v1 stays in the repo until removed.
+`develop`); **since 2026-10-27 being rebuilt as two native apps** — `android/` (Kotlin + Jetpack
+Compose) and `ios/` (Swift + SwiftUI) — the same way as Mawakit (prayer-times-lb). v1 was removed
+in 2.0.0-alpha.2 (git history, tag `v1.0.2`).
 
 ## Decisions the user made (don't re-litigate)
 
@@ -28,17 +29,24 @@ Built on 2026-10-23 as a bare React Native CLI app (v1, `MJFneish/days-counter`,
 | Testing | A **full test at the end** (tests, typecheck, lint, build, emulator) — explicitly asked |
 | v2 (2026-10-27) | "Convert this app like the prayer time app (Mawakit) to a native application, not React Native CLI"; **start at v2, commit every feature, push it with a tag**; "test carefully"; coordinate with the other Claude session testing another app (the Hijri converter, also going native) |
 | v2 versions | 2.0.0-alpha.N per phase (GitHub pre-releases) → **2.0.0** after the full test; build numbers from 100 |
+| v2 platforms (asked mid-conversion, after Mawakit moved to `android/` + `ios/`) | **"Android + iOS"**: Mawakit's layout, v1 removed, **every phase built on both**; iOS built/tested on GitHub Actions macOS runners (no Mac here) |
 
 ## State as of this handoff
 
-**v2 (native):**
-- 2.0.0-alpha.1: `native/` skeleton (Mawakit's toolchain), same id + key + launcher activity as
-  v1 — installed over v1 1.0.1 on the emulator, v1's data (`RKStorage`) and widget prefs survive
-  for the migration; splash; version source `native/version.properties`; scripts
-  (`test:native`, `build:apk`, `bump pre|release`, release reads the new file).
-- Next: engine port + tests (alpha.2), then data/shell/Settings, Home, editor, widget, 2.0.0.
+**v2 (native, both apps):**
+- 2.0.0-alpha.1: the Android skeleton (then `native/`, Mawakit's toolchain), same id + key +
+  launcher activity as v1 — installed over v1 1.0.1 on the emulator; v1's data (`RKStorage`) and
+  widget prefs survive for the migration; splash; version in `version.properties`.
+- 2.0.0-alpha.2: Mawakit's two-app layout — `android/` (+ its tooling scripts), `ios/` (XcodeGen
+  project, `DaysCounterCore` package, SwiftUI skeleton, launch screen, icon, UI smoke test), CI on
+  GitHub Actions (Android tests, i18n copies identical, iOS swift test + app build + UI test with
+  screenshots). v1 removed.
+- Next: the countdown engine in both apps (alpha.3), then data/shell/Settings, Home, editor,
+  widgets, 2.0.0 — see `TODO.md`.
+- Coordination: another Claude session converts the Hijri converter the same way and uses the
+  Pixel_7 emulator on port 5560; this project uses Pixel_8a on 5554.
 
-**v1 (React Native):**
+**v1 (React Native, removed — kept for the record):**
 
 - v0.1.0: scaffold, configs, patches, bump + release scripts, docs.
 - v0.2.0: countdown engine (calendar-day, DST-safe) + 19 Jest tests, stores, EN/AR strings.

@@ -1,0 +1,12 @@
+{
+  "name": "days-counter-android",
+  "private": true,
+  "description": "Tooling for the Days Counter apps (the Android app itself is the Gradle project in this folder; the iOS app is in ../ios).",
+  "scripts": {
+    "test": "node scripts/test.js",
+    "bump": "node scripts/bump-version.js",
+    "build:apk": "node scripts/build-apk.js",
+    "release": "node scripts/github-release.js",
+    "build:icons": "node scripts/generate-icons.js"
+  }
+}

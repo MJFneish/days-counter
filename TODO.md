@@ -5,55 +5,73 @@ for a fresh Claude session (or the human) to see what's real vs planned. If it d
 `CONTINUE_PROJECT.md`'s prose, trust this file and the actual code. Each phase ships as its own
 version (tag + GitHub release, pushed to `develop`).
 
-# v2 — native Android app (Kotlin + Jetpack Compose, `native/`)
+# v2 — native apps: `android/` (Kotlin + Compose) and `ios/` (Swift + SwiftUI)
 
-Asked for on 2026-10-27: convert the app to a native Android app "like Mawakit" (prayer-times-lb's
-v2), starting at v2, one commit + tag per feature, tested carefully. Each phase below ships as
+Asked for on 2026-10-27: convert the app to native "like Mawakit" (prayer-times-lb's v2), starting
+at v2, one commit + tag per feature, tested carefully. When Mawakit moved to `android/` + `ios/`
+mid-conversion, the user chose **Android + iOS, every phase on both**. Each phase ships as
 `2.0.0-alpha.N` (tag + GitHub pre-release, pushed to `develop`); **2.0.0** = the full test pass.
-v1 (the React Native app below) stays in the repo until the user asks to remove it.
+Android is tested here (JUnit + the Pixel_8a emulator); iOS on the macOS CI runner (`swift test`,
+app build, UI smoke test + screenshots).
 
-## v2 Phase 1 — Native skeleton (2.0.0-alpha.1) ✅
-- [x] `native/`: Gradle 9.3.1 / AGP 8.12 / Kotlin 2.2.10 / Compose BOM 2025.08 (Mawakit's set),
-      minSdk 24, target 36
-- [x] Same application id, signing key (RN template `debug.keystore`) and launcher activity name
-      as v1, so v2 installs over it as an update — checked on the emulator (1.0.1 → alpha.1)
+## v2 Phase 1 — Native Android skeleton (2.0.0-alpha.1) ✅
+- [x] Gradle 9.3.1 / AGP 8.12 / Kotlin 2.2.10 / Compose BOM 2025.08 (Mawakit's set), minSdk 24,
+      target 36 (then in `native/`)
+- [x] Same application id, signing key (RN template `debug.keystore`) and launcher activity as
+      v1, so v2 installs over it as an update — checked on the emulator (1.0.1 → alpha.1)
 - [x] Launcher icons from v1, Android 12 SplashScreen with v1's bootsplash emblem on the night tile
-- [x] Version source moved to `native/version.properties` (build numbers from 100); `yarn bump`
-      gains `pre`/`release`; `yarn release` reads it and marks `-alpha` as pre-release;
-      `yarn test:native`, `yarn build:apk`
+- [x] Version source `version.properties` (build numbers from 100); `yarn bump` gains
+      `pre`/`release`; `yarn release` reads it and marks `-alpha` as pre-release
 
-## v2 Phase 2 — Countdown engine in Kotlin (2.0.0-alpha.2)
+## v2 Phase 2 — Two-app layout, iOS skeleton, CI (2.0.0-alpha.2) ✅
+- [x] `native/` → `android/` with its tooling (`android/package.json`, `android/scripts/`); v1
+      (React Native: `src/`, RN `android/` + `ios/`, `App.tsx`, configs, patches, assets) removed —
+      in git history at `v1.0.2`
+- [x] `ios/`: XcodeGen `project.yml`, `DaysCounterCore` Swift package (i18n resources, locale
+      test), SwiftUI app skeleton, launch screen (night tile + emblem), v1's app icon, UI smoke test
+      with screenshots
+- [x] `yarn bump` also writes `ios/project.yml` (x.y.z + shared build number); icon generator
+      writes both apps
+- [x] CI (`.github/workflows/ci.yml`): Android unit tests (Linux), i18n copies identical, iOS
+      `swift test` + app build + UI test on the simulator (macOS), APK on demand; `ci/**` scratch
+      branches for getting iOS code to compile
+- [x] Locale key-parity test in both apps
+
+## v2 Phase 3 — Countdown engine, both apps (2.0.0-alpha.3)
 - [ ] `core/`: `remaining` (calendar days, DST-safe, JS-Date semantics incl. the repeated hour),
       progress, calendar span, phrases (EN + Arabic 6 forms), date/time formats, titles
-- [ ] `i18n/Strings` over v1's i18next JSON (assets), `{{placeholders}}`
-- [ ] JUnit port of every Jest test, in Asia/Beirut, + locale key parity
+- [ ] `Strings` over the shared i18next JSON, `{{placeholders}}`
+- [ ] Every v1 Jest test ported to JUnit and XCTest, in Asia/Beirut
 
-## v2 Phase 3 — Data, theme, shell, Settings (2.0.0-alpha.3)
-- [ ] Stores (countdowns + settings) over SharedPreferences, sanitized; seed 5 Sep 2027 once
-- [ ] First-launch import of v1's AsyncStorage (`RKStorage` SQLite) — countdowns, pin, settings
-- [ ] Dusk theme (light/dark/system), instant RTL via `LocalLayoutDirection`, Lucide icons as
-      vectors, the emblem in Compose, animated loading screen, one shared clock
-- [ ] Tabs pager (Home / Settings) mirrored in Arabic; Settings: language, appearance, countdown
+## v2 Phase 4 — Data, theme, shell, Settings, both apps (2.0.0-alpha.4)
+- [ ] Stores (countdowns + settings), sanitized on load; seed 5 Sep 2027 once
+- [ ] Android: first-launch import of v1's AsyncStorage (`RKStorage` SQLite) — countdowns, pin,
+      settings (iOS v1 never shipped: nothing to import)
+- [ ] Dusk theme (light/dark/system), instant RTL, Lucide icons, the emblem drawn in code,
+      animated loading screen, one shared clock
+- [ ] Tabs (Home / Settings) mirrored in Arabic; Settings: language, appearance, countdown
       options, delete all, about
 
-## v2 Phase 4 — Home (2.0.0-alpha.4)
+## v2 Phase 5 — Home, both apps (2.0.0-alpha.5)
 - [ ] Hero (live D/H/M/S, digits slide in, progress, arrived / count-up), stats card, list rows
       (headline number, progress, pin), empty state, toasts
 
-## v2 Phase 5 — Editor + countdown picker (2.0.0-alpha.5)
+## v2 Phase 6 — Editor + countdown picker, both apps (2.0.0-alpha.6)
 - [ ] Bottom sheet: live preview, name (40), date/time wheels (12/24 h), 9 colors, 12 icons,
       show-on-widget, delete with confirm; past-date note
 - [ ] Settings' countdown picker sheet
 
-## v2 Phase 6 — Widget (2.0.0-alpha.6)
-- [ ] Provider ported (same class name + prefs, so placed widgets survive the update); payload
-      built in Kotlin, pushed on every change and foreground; Settings widget section
+## v2 Phase 7 — Widgets, both apps (2.0.0-alpha.7)
+- [ ] Android: provider ported (same class name + prefs, so placed widgets survive the update);
+      payload built in Kotlin, pushed on every change and foreground; Settings widget section
+- [ ] iOS: WidgetKit extension (App Group), home-screen sizes + lock-screen accessory families,
+      live `Text(.timer)` seconds
 
 ## v2 — Full test + 2.0.0
-- [ ] Unit tests, release build, emulator walk-through EN/AR light/dark, widget resize, update
-      over v1 with real data
+- [ ] Unit tests both apps, Android release build, emulator walk-through EN/AR light/dark, widget
+      resize, update over v1 with real data; iOS screenshots of every screen EN/AR
 
-# v1 — React Native app (kept until removed)
+# v1 — React Native app (removed in 2.0.0-alpha.2; git history, tag v1.0.2)
 
 ## Phase 1 — Scaffold (v0.1.0) ✅
 - [x] Bare RN CLI 0.87.1 TS project, package `com.devlance.dayscounter`, display name
