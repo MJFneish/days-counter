@@ -10,7 +10,8 @@ version (tag + GitHub release, pushed to `develop`).
 Asked for on 2026-10-27: convert the app to native "like Mawakit" (prayer-times-lb's v2), starting
 at v2, one commit + tag per feature, tested carefully. When Mawakit moved to `android/` + `ios/`
 mid-conversion, the user chose **Android + iOS, every phase on both**. Each phase ships as
-`2.0.0-alpha.N` (tag + GitHub pre-release, pushed to `develop`); **2.0.0** = the full test pass.
+`2.0.0-alpha.N` (tag + GitHub pre-release, pushed to `develop`); **2.0.0** = the full test pass
+(done 2026-10-27). New features from here: a minor version each, on both apps.
 Android is tested here (JUnit + the Pixel_8a emulator); iOS on the macOS CI runner (`swift test`,
 app build, UI smoke test + screenshots).
 
@@ -85,13 +86,21 @@ phase here too.)
 - [x] The large/medium widget no longer says "The day is here!" twice with count-up off (a v1 bug)
 - [ ] On a real iPhone: placing the widget, the App Group sharing (needs a signing team)
 
-## v2 — Full test + 2.0.0
+## v2 — Full test + 2.0.0 ✅
 - [x] Update over v1 for real (emulator): v1 1.0.1 installed fresh, data made in v1's own UI (a
       named countdown pinned, Arabic, 24-hour), v1's widget placed → v2 release APK installed over
       it: no signature error, the placed widget kept rendering before v2 was opened, and v2 opened
       with everything imported (hero = the pinned one, Arabic, 24-hour on, both countdowns)
-- [ ] Unit tests both apps, Android release build, emulator walk-through EN/AR light/dark; iOS
-      screenshots of every screen EN/AR
+- [x] Unit tests: Android 43/43 (JUnit), iOS `swift test` + the 5 UI tests on CI
+- [x] Android release APK (R8, 1.6 MB) on a wiped emulator: fresh install (seed, defaults), add +
+      pin a countdown, in-app "Add the widget", Arabic + dark (app, About version, widget), data
+      kept across a force-stop and a reinstall
+- [x] iOS screenshots of every screen EN/AR, light/dark, and the widget faces (CI artifact)
+- [x] Fix from that run: the Arabic hero showed "٦٠" as "٦" (negative letter spacing measured too
+      narrow in RTL → wrapped under `maxLines = 1`); no tightening in Arabic now
+- [ ] Not verifiable here: a physical Android phone (lock-screen widget where allowed), a real
+      iPhone (widget placement, App Group with a signing team), Google Play's USE_EXACT_ALARM
+      policy before any Play release
 
 # v1 — React Native app (removed in 2.0.0-alpha.2; git history, tag v1.0.2)
 

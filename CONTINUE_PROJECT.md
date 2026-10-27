@@ -9,7 +9,7 @@ file's prose if they disagree.
 **Days Counter / عدّاد الأيام** — counts down to dates (days, hours, minutes, seconds, live), with
 a resizable home-screen widget for the pinned countdown. EN/AR (RTL), light/dark, offline.
 Built on 2026-10-23 as a bare React Native CLI app (v1, `MJFneish/days-counter`, branch
-`develop`); **since 2026-10-27 being rebuilt as two native apps** — `android/` (Kotlin + Jetpack
+`develop`); **rebuilt on 2026-10-27 as two native apps (2.0.0)** — `android/` (Kotlin + Jetpack
 Compose) and `ios/` (Swift + SwiftUI) — the same way as Mawakit (prayer-times-lb). v1 was removed
 in 2.0.0-alpha.2 (git history, tag `v1.0.2`).
 
@@ -50,7 +50,12 @@ in 2.0.0-alpha.2 (git history, tag `v1.0.2`).
   icons, delete) on both apps.
 - 2.0.0-alpha.6: the widgets — Android (v1's provider on the shared engine, exact alarms,
   Settings section + picker) and iOS (WidgetKit: small/medium + lock screen, App Group).
-- Next: the full test and 2.0.0 — see `TODO.md`.
+- 2.0.0: the full test — Android unit tests + the release APK walked through on a wiped emulator
+  (fresh install, add/pin, widget, Arabic + dark, data kept), iOS tests + screenshots on CI; one
+  fix from it (the Arabic hero's number wrapping under negative letter spacing).
+- **Not verified**: a physical Android phone (lock-screen widget where a device allows it), a real
+  iPhone (placing the widget, App Group sharing — needs a signing team), Google Play's policy for
+  USE_EXACT_ALARM (alarm/calendar apps only) before any Play release.
 - Coordination: another Claude session converts the Hijri converter the same way and uses the
   Pixel_7 emulator on port 5560; this project uses Pixel_8a on 5554.
 
@@ -73,5 +78,6 @@ in 2.0.0-alpha.2 (git history, tag `v1.0.2`).
 
 ## Next steps a fresh session might be asked for
 
-1. Continue the phases in `TODO.md`.
+1. A new feature: build it in **both** apps, test both (emulator + CI), `yarn bump minor`, tag,
+   release — see CLAUDE.md.
 2. Ideas parked at the bottom of `TODO.md` — ask first.

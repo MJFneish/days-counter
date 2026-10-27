@@ -17,6 +17,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.devlance.dayscounter.core.Countdown
 import com.devlance.dayscounter.core.CountdownStatus
 import com.devlance.dayscounter.core.CountUnit
@@ -97,8 +98,11 @@ fun HeroCountdown(countdown: Countdown, onClick: () -> Unit) {
     if (showCount) {
       // The number above its label, not beside it: side by side, the label wrapped and lost a word
       // in Arabic (seen on v1's first emulator run) and a 5-digit count would crowd it out.
+      // No negative letter spacing in Arabic: in a right-to-left paragraph Android measures it too
+      // narrow, so "٦٠" wrapped and the single line showed only "٦" (2.0.0 emulator run).
+      val numberStyle = if (theme.isRtl) Type.hero.copy(letterSpacing = 0.sp) else Type.hero
       Column(Modifier.padding(top = Spacing.md)) {
-        RollingText(formatNumber(r.days, theme.lang), Type.hero, c.onHero)
+        RollingText(formatNumber(r.days, theme.lang), numberStyle, c.onHero)
         Text("${unitWord(CountUnit.DAY, r.days, theme.lang)} ${if (passed) s["countdown.since"] else s["countdown.toGo"]}", style = Type.subtitle, color = c.onHeroMuted)
       }
       Row(Modifier.fillMaxWidth().padding(top = Spacing.md), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {

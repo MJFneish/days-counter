@@ -20,8 +20,9 @@ fresh, [`TODO.md`](./TODO.md) for the phased checklist (source of truth for "wha
 ## The v2 conversion (2026-10-27)
 
 The user asked to convert the app "like Mawakit" to native apps, starting at v2, one commit + tag
-per feature, tested carefully. Each phase ships as **2.0.0-alpha.N** on both platforms; **2.0.0**
-is the full test pass. The rules in "Countdown engine", "UI", "Widget" and "Design system" below
+per feature, tested carefully. Each phase shipped as **2.0.0-alpha.N** on both platforms; **2.0.0**
+(same day) is the full test pass — the conversion is done, and from here a feature is a minor
+version and a fix a patch, built on both apps. The rules in "Countdown engine", "UI", "Widget" and "Design system" below
 are v1's behaviour, which both apps reproduce — `TODO.md` says which phases have landed. File
 names in those sections are v1's (TypeScript, in git history) unless a Kotlin/Swift path is given.
 
@@ -72,12 +73,12 @@ The user asked for **each commit to carry its own app version, a GitHub tag and 
 be pushed to `develop`** (the repo's only branch). The routine, in this order:
 
 1. `yarn bump minor` (feature) / `yarn bump patch` (fix), in `android/` — in the **same** commit
-   as the work. During the v2 conversion each phase is `yarn bump pre` (2.0.0-alpha.N), then
-   `yarn bump release` for 2.0.0 once fully tested.
+   as the work. (The v2 conversion used `yarn bump pre` per phase — 2.0.0-alpha.N — and
+   `yarn bump release` for 2.0.0.)
 2. `git commit` → `git tag -a v<version> -m "<version>"` → `git push origin develop --follow-tags`.
 3. `yarn release` (in `android/`) → GitHub release titled `<version>` (notes = the commit message;
    [`android/scripts/github-release.js`](./android/scripts/github-release.js), REST API with the token from
-   `git credential fill` — `gh` isn't installed; never print the token).
+   `git credential fill` — it doesn't need `gh`; never print the token).
 
 Versions ran **0.1.0 (scaffold) → minor per feature → 1.0.0 = finished and fully tested**, then
 v2 **2.0.0-alpha.1 → alpha per phase → 2.0.0** (same idea). 0.x and `-alpha` releases are marked
@@ -326,6 +327,10 @@ regenerated from `assets/brand/splash-logo.svg` (command in help.md).
   (found when the UI test couldn't match the Arabic hero's label).
 - **Arabic labels wrap**: the hero's "days to go" label sits under the number, not beside it — side
   by side it wrapped and lost a word in Arabic ("متبقٍّ").
+- **Android: no negative `letterSpacing` on right-to-left text.** In an RTL paragraph (an Arabic
+  string, or digits-only text under the Arabic layout direction) Compose measures it too narrow, so
+  the text wraps — on the hero, `maxLines = 1` then showed "٦٠" as "٦". The hero drops its −1.5 sp
+  in Arabic (found in the 2.0.0 emulator run).
 - **Sheets must cover the whole window** (v1's RN `Modal` laid its content out short under
   edge-to-edge, making the bottom of Save/Cancel untouchable). Check the sheet's buttons are
   tappable on a device after any sheet change.
