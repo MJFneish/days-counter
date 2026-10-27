@@ -91,6 +91,11 @@ class PhrasesTest {
   }
 
   @Test
+  fun versionsStayLeftToRightInArabic() {
+    assertEquals("${Char(0x2066)}٢.٠.٠-alpha.٥${Char(0x2069)}", ltr(localizeDigits("2.0.0-alpha.5", Lang.AR)))
+  }
+
+  @Test
   fun stringsInterpolateAndFallBack() {
     assertEquals("Edit Graduation", en.t("home.edit", "name" to "Graduation"))
     assertEquals("Days Counter", en["app.name"])

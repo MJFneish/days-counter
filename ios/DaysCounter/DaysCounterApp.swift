@@ -32,6 +32,15 @@ struct RootView: View {
   @State private var loading = true
 
   var body: some View {
+    if ProcessInfo.processInfo.environment["DAYS_COUNTER_WIDGET_GALLERY"] == "1" {
+      // UI test: the widget's faces, since a widget can't be screenshotted on CI.
+      WidgetGallery()
+    } else {
+      app
+    }
+  }
+
+  private var app: some View {
     ZStack {
       TabView(selection: $tab) {
         HomeView()
@@ -62,6 +71,14 @@ struct RootView: View {
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
     }
+    .sheet(isPresented: $model.pickerOpen) {
+      CountdownPickerView()
+        .modifier(Themed())
+        .environmentObject(model)
+        .environmentObject(clock)
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
+    }
     .task {
       try? await Task.sleep(nanoseconds: UInt64(minLoadingVisible * 1_000_000_000))
       withAnimation(.easeOut(duration: 0.38)) { loading = false }
@@ -70,7 +87,9 @@ struct RootView: View {
     .onChange(of: model.settings.showSeconds) { _, everySecond in clock.start(everySecond: everySecond) }
     .onChange(of: scenePhase) { _, phase in
       switch phase {
-      case .active: clock.start(everySecond: model.settings.showSeconds)
+      case .active:
+        clock.start(everySecond: model.settings.showSeconds)
+        model.reloadWidget()
       case .background: clock.stop()
       default: break
       }

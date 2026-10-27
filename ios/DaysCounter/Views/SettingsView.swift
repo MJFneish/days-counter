@@ -2,8 +2,7 @@ import DaysCounterCore
 import SwiftUI
 
 /// Settings, in the Android app's order: language · appearance (follow-system switch, light/dark
-/// tiles otherwise) · countdown options · home-screen widget (from the widget phase on) · data ·
-/// about.
+/// tiles otherwise) · countdown options · home-screen widget · data · about.
 struct SettingsView: View {
   @EnvironmentObject private var model: AppModel
   @Environment(\.theme) private var theme
@@ -56,6 +55,8 @@ struct SettingsView: View {
           SwitchRow(symbol: "clock", title: s["settings.clock24"], hint: s["settings.clock24Hint"], isOn: binding(\.use24h))
         }
 
+        WidgetSection()
+
         if !model.countdowns.countdowns.isEmpty {
           SectionLabel(text: s["settings.data"])
           DangerButton(label: s["settings.reset"]) { confirmReset = true }
@@ -67,7 +68,7 @@ struct SettingsView: View {
             AppLogo(size: 52, tile: true)
             VStack(alignment: .leading, spacing: 2) {
               Text(s["app.name"]).font(TypeScale.subtitle).foregroundStyle(c.text)
-              Text(theme.t("settings.version", ("version", localizeDigits(appVersion, theme.lang))))
+              Text(theme.t("settings.version", ("version", ltr(localizeDigits(appVersion, theme.lang)))))
                 .font(TypeScale.caption)
                 .foregroundStyle(c.textMuted)
             }

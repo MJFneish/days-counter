@@ -48,7 +48,9 @@ in 2.0.0-alpha.2 (git history, tag `v1.0.2`).
   test's screenshots).
 - 2.0.0-alpha.5: the real Home (hero, stats, list, pin) and the add/edit editor (wheels, colors,
   icons, delete) on both apps.
-- Next: widgets on both (alpha.6), then the full test and 2.0.0 — see `TODO.md`.
+- 2.0.0-alpha.6: the widgets — Android (v1's provider on the shared engine, exact alarms,
+  Settings section + picker) and iOS (WidgetKit: small/medium + lock screen, App Group).
+- Next: the full test and 2.0.0 — see `TODO.md`.
 - Coordination: another Claude session converts the Hijri converter the same way and uses the
   Pixel_7 emulator on port 5560; this project uses Pixel_8a on 5554.
 

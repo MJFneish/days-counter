@@ -62,6 +62,10 @@ fun formatClock(hour: Int, minute: Int, lang: Lang, use24h: Boolean): String {
   return localizeDigits("${hour12(hour)}:${pad2(minute)} ${dayPeriod(hour, lang)}", lang)
 }
 
+/** Keeps a left-to-right run (a version like "٢.٠.٠-alpha.٥") in order inside Arabic text: without
+ * the isolate, Arabic-Indic digits next to Latin letters get reordered ("٥.alpha-٢.٠.٠"). */
+fun ltr(text: String): String = "${Char(0x2066)}$text${Char(0x2069)}"
+
 /** "62%" / "٦٢٪". */
 fun formatPercent(percent: Int, lang: Lang): String =
   if (lang == Lang.AR) "${localizeDigits(percent, lang)}٪" else "$percent%"

@@ -1,20 +1,20 @@
 import DaysCounterCore
 import Foundation
 import SwiftUI
+import WidgetKit
 
 /// The app's state — settings and countdowns — persisted as JSON in the App Group's UserDefaults
-/// (where the widget reads it too), saved on every change. The iOS twin of the Android app's
-/// AppStore. Launch-environment overrides make the UI tests deterministic.
+/// (SharedStore, where the widget reads it too), saved on every change, after which the widget is
+/// reloaded. The iOS twin of the Android app's AppStore + WidgetSync. Launch-environment overrides
+/// make the UI tests deterministic.
 @MainActor
 final class AppModel: ObservableObject {
-  static let appGroup = "group.com.devlance.dayscounter"
-  private static let keySettings = "settings"
-  private static let keyCountdowns = "countdowns"
-
   @Published private(set) var settings: Settings
   @Published private(set) var countdowns: CountdownsState
   /// The add/edit sheet: open with a countdown's id, or `nil` for a new one.
   @Published var editor: EditorRequest?
+  /// Settings → widget → "Change": the countdown picker sheet.
+  @Published var pickerOpen = false
   /// The latest confirmation toast ("Countdown added"); `toastId` changes with each one.
   @Published private(set) var toast: String?
   @Published private(set) var toastId = 0
@@ -22,28 +22,21 @@ final class AppModel: ObservableObject {
   private let defaults: UserDefaults
 
   init() {
-    let defaults = UserDefaults(suiteName: AppModel.appGroup) ?? .standard
+    let defaults = SharedStore.defaults
     self.defaults = defaults
     let env = ProcessInfo.processInfo.environment
     if env["DAYS_COUNTER_RESET"] == "1" {
-      defaults.removeObject(forKey: AppModel.keySettings)
-      defaults.removeObject(forKey: AppModel.keyCountdowns)
+      defaults.removeObject(forKey: SharedStore.keySettings)
+      defaults.removeObject(forKey: SharedStore.keyCountdowns)
     }
 
-    // First-launch defaults, as on Android: the phone's language and 12/24-hour clock.
-    let clockFormat = DateFormatter.dateFormat(fromTemplate: "j", options: 0, locale: .current) ?? ""
-    let device = Settings(
-      language: (Locale.preferredLanguages.first ?? "en").hasPrefix("ar") ? .ar : .en,
-      use24h: !clockFormat.contains("a")
-    )
-    var settings = StoreJson.decodeSettings(StoreJson.object(defaults.data(forKey: AppModel.keySettings)), defaults: device)
+    var settings = SharedStore.loadSettings(defaults)
     if let lang = env["DAYS_COUNTER_LANGUAGE"] { settings.language = Lang.of(lang) }
     if let mode = env["DAYS_COUNTER_THEME"].flatMap(ThemeMode.init(rawValue:)) { settings.themeMode = mode }
     self.settings = settings
 
     let now = nowMs()
-    let loaded = StoreJson.decodeCountdowns(StoreJson.object(defaults.data(forKey: AppModel.keyCountdowns)), now: now)
-    self.countdowns = loaded.seededIfNeeded(id: newCountdownId(now: now), now: now)
+    self.countdowns = SharedStore.loadCountdowns(defaults, now: now).seededIfNeeded(id: newCountdownId(now: now), now: now)
     saveSettings()
     saveCountdowns()
   }
@@ -72,12 +65,19 @@ final class AppModel: ObservableObject {
     toastId += 1
   }
 
+  /// The widget follows every change (and every return to the foreground).
+  func reloadWidget() {
+    WidgetCenter.shared.reloadAllTimelines()
+  }
+
   private func saveSettings() {
-    defaults.set(StoreJson.data(StoreJson.encodeSettings(settings)), forKey: AppModel.keySettings)
+    SharedStore.save(settings, defaults)
+    reloadWidget()
   }
 
   private func saveCountdowns() {
-    defaults.set(StoreJson.data(StoreJson.encodeCountdowns(countdowns)), forKey: AppModel.keyCountdowns)
+    SharedStore.save(countdowns, defaults)
+    reloadWidget()
   }
 }
 

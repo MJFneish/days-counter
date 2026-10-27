@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+  <!-- Exact alarms, so the widget flips its day count right at the change. SCHEDULE_EXACT_ALARM is
+       pre-granted on Android 12/12L; from 13 on USE_EXACT_ALARM is granted at install (without it
+       Android 14+ denies exact alarms by default, and an inexact alarm can land 10 minutes late —
+       the Chronometer would run past zero meanwhile). Same pair as Mawakit. Google Play only
+       accepts USE_EXACT_ALARM from alarm/calendar apps — revisit before publishing there. Without
+       either, DaysWidgetProvider.scheduleRefresh falls back to an inexact window. -->
+  <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32" />
+  <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+
   <application
     android:name=".DaysCounterApp"
     android:allowBackup="false"
@@ -23,5 +32,23 @@
         <category android:name="android.intent.category.LAUNCHER" />
       </intent-filter>
     </activity>
+
+    <!-- v1's component name: widgets placed before the update are bound to it and stay. -->
+    <receiver
+      android:name=".widget.DaysWidgetProvider"
+      android:exported="false"
+      android:label="@string/widget_label">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+        <action android:name="android.intent.action.TIME_SET" />
+        <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+        <action android:name="android.intent.action.DATE_CHANGED" />
+        <action android:name="android.intent.action.LOCALE_CHANGED" />
+        <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+      </intent-filter>
+      <meta-data
+        android:name="android.appwidget.provider"
+        android:resource="@xml/days_widget_info" />
+    </receiver>
   </application>
 </manifest>

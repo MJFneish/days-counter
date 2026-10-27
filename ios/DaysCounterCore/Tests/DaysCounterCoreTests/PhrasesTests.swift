@@ -79,6 +79,10 @@ final class PhrasesTests: XCTestCase {
     XCTAssertEqual(relativePhrase(remaining(seed.target, now: at(2027, 9, 8, 9)), ar), "منذ ٣ أيام")
   }
 
+  func testVersionsStayLeftToRightInArabic() {
+    XCTAssertEqual(ltr(localizeDigits("2.0.0-alpha.5", .ar)), "\u{2066}٢.٠.٠-alpha.٥\u{2069}")
+  }
+
   func testStringsInterpolateAndFallBack() {
     XCTAssertEqual(en.t("home.edit", ("name", "Graduation")), "Edit Graduation")
     XCTAssertEqual(en["app.name"], "Days Counter")

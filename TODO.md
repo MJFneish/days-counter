@@ -71,16 +71,27 @@ phase here too.)
 - [x] Android: in-window sheet over the tabs (scrim, slide, Back closes it, above the keyboard),
       snapping LazyColumn wheels; iOS: native sheet + wheel pickers
 
-## v2 Phase 6 — Widgets, both apps (2.0.0-alpha.6)
-- [ ] Android: v1's provider (same class name + prefs, so placed widgets survive the update) on the
+## v2 Phase 6 — Widgets, both apps (2.0.0-alpha.6) ✅
+- [x] Android: v1's provider (same class name + prefs, so placed widgets survive the update) on the
       shared engine; payload built in Kotlin and re-pushed on every change and foreground; exact
-      alarms via USE_EXACT_ALARM; Settings widget section + countdown picker sheet
-- [ ] iOS: WidgetKit extension (App Group), small/medium + lock-screen circular/rectangular/inline,
-      live timer text, timeline at each day change; Settings widget section + picker
+      alarms via USE_EXACT_ALARM; Settings widget section + countdown picker sheet — checked on the
+      emulator: in-app "Add the widget", live Chronometer, re-pin/re-color, Arabic, resize
+      large → wide → small, alarm at 23:00 for a midnight change
+- [x] iOS: WidgetKit extension (App Group), small/medium + lock-screen circular/rectangular/inline,
+      live timer text, timeline at each day change; Settings widget section + picker; faces checked
+      through the in-app gallery on CI
+- [x] Arabic version line in About kept left-to-right (`ltr()` isolate; it read "٥.alpha-٢.٠.٠"),
+      iOS labels made verbatim (interpolated literals carried bidi isolates) — both found testing
+- [x] The large/medium widget no longer says "The day is here!" twice with count-up off (a v1 bug)
+- [ ] On a real iPhone: placing the widget, the App Group sharing (needs a signing team)
 
 ## v2 — Full test + 2.0.0
-- [ ] Unit tests both apps, Android release build, emulator walk-through EN/AR light/dark, widget
-      resize, update over v1 with real data; iOS screenshots of every screen EN/AR
+- [x] Update over v1 for real (emulator): v1 1.0.1 installed fresh, data made in v1's own UI (a
+      named countdown pinned, Arabic, 24-hour), v1's widget placed → v2 release APK installed over
+      it: no signature error, the placed widget kept rendering before v2 was opened, and v2 opened
+      with everything imported (hero = the pinned one, Arabic, 24-hour on, both countdowns)
+- [ ] Unit tests both apps, Android release build, emulator walk-through EN/AR light/dark; iOS
+      screenshots of every screen EN/AR
 
 # v1 — React Native app (removed in 2.0.0-alpha.2; git history, tag v1.0.2)
 

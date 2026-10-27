@@ -125,6 +125,8 @@
     "addWidgetHint": "Resizable — long-press it on the home screen and drag its edges",
     "addWidgetManual": "Long-press your home screen → Widgets → Days Counter",
     "lockScreenNote": "Phones and tablets that allow lock-screen widgets can show it there too.",
+    "addWidgetIos": "Touch and hold your home screen, tap Edit → Add Widget, then choose Days Counter",
+    "lockScreenIos": "On the lock screen too: touch and hold it → Customize → Lock Screen → add Days Counter",
     "chooseCountdown": "Countdown on the widget",
     "data": "Data",
     "reset": "Delete all countdowns",

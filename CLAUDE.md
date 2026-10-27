@@ -202,7 +202,7 @@ the two apps run the same algorithms — change both together, with their tests.
   ([`WidgetSection`](./src/components/settings/WidgetSection.tsx), Android only: the pinned
   countdown + "Change" → [`CountdownPickerSheet`](./src/components/settings/CountdownPickerSheet.tsx),
   "Add the widget" via `requestPinAppWidget` when the launcher supports it (manual steps
-  otherwise), resize hint, lock-screen note — lands with the widgets) · data (delete all,
+  otherwise), resize hint, lock-screen note; on iOS the add-it steps instead) · data (delete all,
   confirm) · about (logo, the full version: `BuildConfig.VERSION_NAME` / Info.plist
   `DCVersionName`, description).
 - **Loading**: the system splash / launch screen (night `#170B26`, 120 dp emblem) → the animated
@@ -213,50 +213,73 @@ the two apps run the same algorithms — change both together, with their tests.
 - **Toasts / confirms**: a pill above the tab bar (`ToastHost` / `ToastOverlay`, 1.8 s); destructive
   actions ask first (`ConfirmDialog` / `.alert`).
 
-## Home-screen widget (v1's design — v2 keeps it minus the JS bridge)
+## Home-screen widgets — read before touching `android/…/widget/` or `ios/DaysCounterWidgets`
 
-- **Bridge**: an app-local **Turbo Native Module** `DaysWidget`. Spec
-  [`src/native/NativeDaysWidget.ts`](./src/native/NativeDaysWidget.ts) → codegen
-  (`package.json` → `codegenConfig`, `javaPackageName com.devlance.dayscounter.widget`) generates
-  `NativeDaysWidgetSpec` → [`DaysWidgetModule.kt`](./android/app/src/main/java/com/devlance/dayscounter/widget/DaysWidgetModule.kt),
-  registered by hand in `MainApplication` via `DaysWidgetPackage` (app code isn't autolinked).
-  `TurboModuleRegistry.get` (not `getEnforcing`), so iOS — no native side — gets `null` and
-  `widgetAvailable` is false. Methods: `setPayload(json)`, `requestPin()`,
-  `isRequestPinSupported()`, `getInstalledCount()`.
-- **The widget computes the countdown itself.** JS pushes only the pinned countdown's wall-clock
-  target, title/detail lines, color, language, count-up flag and a few UI strings
-  ([`payload.ts`](./src/widget/payload.ts)); [`useWidgetSync`](./src/widget/useWidgetSync.ts)
-  (App.tsx) re-pushes when any of that changes and on every foreground. Natively,
-  [`Countdown.kt`](./android/app/src/main/java/com/devlance/dayscounter/widget/Countdown.kt) is a
-  port of `remaining()` (lenient `Calendar`, same calendar-day semantics) — **keep the two in
-  sync**, and keep `WidgetPayload` in sync with `WidgetStore.kt`. Known difference: for a target
-  wall time inside a DST *repeated* hour, JS picks the first occurrence and Java the second.
+Both show the **pinned** countdown and compute it themselves with the app's own engine, so the app
+and the widget can't drift apart (v1 had a separate Kotlin port to keep in sync).
+
+### Android (`android/app/src/main/java/com/devlance/dayscounter/widget/`)
+
+- **v1's component and storage names are kept** — receiver `.widget.DaysWidgetProvider`,
+  SharedPreferences `days_widget` / key `payload` — so widgets placed under v1 stay through the
+  update and keep rendering v1's last payload until the app first opens.
+- **Payload** (`WidgetPayload.kt`, v1's JSON contract): the pinned countdown's wall-clock target,
+  title/detail lines, color, language, count-up flag and a few UI strings. `WidgetSync` (started in
+  `DaysCounterApp`) rebuilds it from the stores on every change (and redraws only when it
+  changed), and redraws on every foreground. Because it starts with the process, an alarm-woken
+  widget also re-syncs from the stores without the app's UI. Unit-tested (`WidgetPayloadTest`:
+  v1's case, round trip, v1's stored payload, the wake-up schedule).
 - **Live seconds without the app**: the day count is text; H:MM:SS is a `Chronometer` counting
-  down to `nextChangeAt` (or up from the last change after the date). `DaysWidgetProvider`
-  schedules an alarm for the day change and one **an hour before it**, to switch the Chronometer
-  format to `"0:%s"` — by default it drops the hour under 60 minutes ("59:59"), which would read
-  as H:MM. Exact alarms only if "Alarms & reminders" is allowed (`SCHEDULE_EXACT_ALARM`,
-  pre-granted on 12/12L), otherwise a 1-minute window; `updatePeriodMillis` 30 min is the
-  backstop; TIME_SET / TIMEZONE / DATE / LOCALE changes and app updates refresh too.
-  The Chronometer's digits follow the **phone's** locale (Android API), the rest the app language.
+  down to `nextChangeAt` (or up from `boundaryAt` after the date). The provider schedules an alarm
+  for the day change and one **an hour before it**, to switch the Chronometer format to `"0:%s"` —
+  by default it drops the hour under 60 minutes ("59:59"), which would read as H:MM. **Exact
+  alarms**: `USE_EXACT_ALARM` (13+, granted at install) + `SCHEDULE_EXACT_ALARM` (≤ 12) — without
+  them Android 14+ makes it inexact with a **10-minute** minimum window, during which the
+  Chronometer runs past zero (v1 had that gap). Google Play only allows USE_EXACT_ALARM for
+  alarm/calendar apps — revisit before a Play release. `updatePeriodMillis` 30 min is the backstop;
+  TIME_SET / TIMEZONE / DATE / LOCALE changes and app updates refresh too. The Chronometer's
+  digits follow the **phone's** locale (Android API), the rest the app language.
 - **Resizable**: four layouts sharing view ids — `widget_small` (1×1/2×1: number + unit),
   `widget_square` (2×2: + name + H:MM:SS), `widget_wide` (n×1: name/date | number/H:MM:SS),
   `widget_large` (3×2+: + progress). Android 12+ gets them as a size map
   (40×40 / 100×100 / 180×50 / 200×110 dp — the launcher takes the closest that fits, live while
-  resizing); older versions pick from `OPTION_APPWIDGET_MIN_WIDTH`/`MAX_HEIGHT` with the same
-  thresholds. Min resize 40×40 dp (1×1), default 3×2.
+  resizing; checked on the emulator large → wide → small); older versions pick from
+  `OPTION_APPWIDGET_MIN_WIDTH`/`MAX_HEIGHT` with the same thresholds. Min resize 40×40 dp, default 3×2.
 - Backgrounds: one gradient drawable per countdown color (`res/drawable/widget_bg_*.xml`, same
-  stops as `COUNTDOWN_PALETTE`), set with `setBackgroundResource` on the root
-  (`@android:id/background`, `clipToOutline`, radius = the launcher's on 12+). White text.
-  RTL via `setLayoutDirection` on the root; the progress drawable clips from "start".
+  stops as `CountdownPalette.kt` — keep `WidgetColors.kt` in sync), set on the root
+  (`@android:id/background`, `clipToOutline`, radius = the launcher's on 12+). White text. RTL via
+  `setLayoutDirection` on the root; the progress drawable clips from "start".
 - Unit words use Android `<plurals>` (values-ar has zero/one/two/few/many/other, matching
-  `AR_WORD.day`) through a context switched to the **app's** language. Numbers are mapped to
-  Arabic-Indic digits **by hand** (`formatNumber` in the provider): Android's `ar` locale formats
-  with Latin digits, unlike the app.
+  `Plural.kt`'s day noun) through a context switched to the **app's** language. Numbers go through
+  the core `formatNumber` (Arabic-Indic digits by hand).
+- **Settings → Home-screen widget** (`ui/settings/WidgetSection.kt`): the pinned countdown +
+  "Change" (the countdown picker sheet), "Add the widget" via `requestPinAppWidget` when the
+  launcher supports it (manual steps otherwise), resize hint, lock-screen note.
 - **Lock screen**: declared `home_screen|keyguard` with `initialKeyguardLayout`. Stock Android
   phones don't allow third-party lock-screen widgets (tablets on Android 15+ and some vendors do);
   the user declined a lock-screen notification instead (2026-10-23).
 - Picker preview: `widget_preview.xml` (Android 12+ `previewLayout`, sample values, localized).
+
+### iOS (`ios/DaysCounterWidgets/` + `ios/Shared/`)
+
+- A WidgetKit extension (`com.devlance.dayscounter.widgets`) sharing the **App Group**
+  `group.com.devlance.dayscounter` with the app: `SharedStore` (DaysCounterCore) reads the same
+  `settings` / `countdowns` JSON the app writes; `AppModel` reloads all timelines after every
+  change and on every foreground.
+- `WidgetSnapshot` (Core): the pinned countdown, its title/detail, language and count-up.
+  `WidgetTimeline.changes` gives the day changes → one timeline entry each (30 ahead, policy
+  `.atEnd`); the H:MM:SS between them is `Text(timerInterval:)`, which WidgetKit ticks by itself.
+  Tested in `WidgetTests`.
+- Families: `systemSmall` (name, number, unit, timer), `systemMedium` (name/date, number + unit +
+  timer, progress), and the **lock screen** — `accessoryCircular`, `accessoryRectangular`,
+  `accessoryInline` (iOS allows third-party lock-screen widgets, unlike stock Android).
+  Background = the countdown's gradient via `containerBackground`. RTL from the app's language.
+- The faces (`Shared/WidgetContent.swift`) are compiled into the app too: launched with
+  `DAYS_COUNTER_WIDGET_GALLERY=1` it shows them (`WidgetGallery`), which the UI test screenshots —
+  a widget itself can't be captured on CI. On CI the build is unsigned, so the App Group isn't
+  really shared there; on a device with a signing team it is.
+- Settings → widget section: the pinned countdown + "Change" (picker sheet) and the steps to add it
+  (iOS has no in-app "add widget" call): `settings.addWidgetIos`, `settings.lockScreenIos`.
 
 ## Design system ("Dusk")
 
@@ -295,6 +318,12 @@ regenerated from `assets/brand/splash-logo.svg` (command in help.md).
 - **Arabic digits**: the app shows Arabic-Indic digits in Arabic; Android's `ar` locale formats
   numbers with Latin digits, so digits are mapped by hand (the widget too). The widget's
   `Chronometer` digits follow the phone's locale — no API to change them.
+- **Arabic-Indic digits next to Latin letters** (a version like "2.0.0-alpha.5") get reordered in
+  Arabic text ("٥.alpha-٢.٠.٠") — wrap such runs in `ltr()` (core `Format`, an LTR isolate).
+- **iOS: an interpolated string literal** in `Text("…\(x)…")` / `.accessibilityLabel("…\(x)…")` is a
+  `LocalizedStringKey`, which wraps every value in invisible bidi isolates (U+2068/U+2069) in
+  Arabic — and tries a localization lookup. Use `Text(verbatim:)` or a `String` for dynamic text
+  (found when the UI test couldn't match the Arabic hero's label).
 - **Arabic labels wrap**: the hero's "days to go" label sits under the number, not beside it — side
   by side it wrapped and lost a word in Arabic ("متبقٍّ").
 - **Sheets must cover the whole window** (v1's RN `Modal` laid its content out short under

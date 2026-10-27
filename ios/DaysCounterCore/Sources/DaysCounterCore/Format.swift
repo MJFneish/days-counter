@@ -62,6 +62,10 @@ public func formatClock(_ hour: Int, _ minute: Int, _ lang: Lang, _ use24h: Bool
   return localizeDigits("\(hour12(hour)):\(pad2(minute)) \(dayPeriod(hour, lang))", lang)
 }
 
+/// Keeps a left-to-right run (a version like "٢.٠.٠-alpha.٥") in order inside Arabic text: without
+/// the isolate, Arabic-Indic digits next to Latin letters get reordered ("٥.alpha-٢.٠.٠").
+public func ltr(_ text: String) -> String { "\u{2066}\(text)\u{2069}" }
+
 /// "62%" / "٦٢٪".
 public func formatPercent(_ percent: Int, _ lang: Lang) -> String {
   lang == .ar ? "\(localizeDigits(percent, lang))٪" : "\(percent)%"

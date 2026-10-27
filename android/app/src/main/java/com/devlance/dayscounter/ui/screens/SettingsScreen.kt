@@ -42,6 +42,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.devlance.dayscounter.BuildConfig
 import com.devlance.dayscounter.core.Lang
 import com.devlance.dayscounter.core.localizeDigits
+import com.devlance.dayscounter.core.ltr
 import com.devlance.dayscounter.data.AppStore
 import com.devlance.dayscounter.data.ThemeMode
 import com.devlance.dayscounter.ui.brand.AppLogo
@@ -56,6 +57,7 @@ import com.devlance.dayscounter.ui.components.SwitchRow
 import com.devlance.dayscounter.ui.components.Toasts
 import com.devlance.dayscounter.ui.icons.LucideIcon
 import com.devlance.dayscounter.ui.icons.LucideIcons
+import com.devlance.dayscounter.ui.settings.WidgetSection
 import com.devlance.dayscounter.ui.theme.Radius
 import com.devlance.dayscounter.ui.theme.Spacing
 import com.devlance.dayscounter.ui.theme.Type
@@ -63,7 +65,7 @@ import com.devlance.dayscounter.ui.theme.appTheme
 
 /**
  * Settings, in v1's order: language · appearance (follow-system switch, light/dark tiles otherwise)
- * · countdown options · home-screen widget (from the widget phase on) · data · about.
+ * · countdown options · home-screen widget · data · about.
  */
 @Composable
 fun SettingsScreen() {
@@ -145,6 +147,9 @@ fun SettingsScreen() {
       }
     }
 
+    // Home-screen widget
+    WidgetSection()
+
     // Data
     if (hasCountdowns) {
       SectionLabel(s["settings.data"])
@@ -158,7 +163,7 @@ fun SettingsScreen() {
         AppLogo(52.dp, tile = true)
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
           Text(s["app.name"], style = Type.subtitle, color = c.text)
-          Text(s.t("settings.version", "version" to localizeDigits(BuildConfig.VERSION_NAME, theme.lang)), style = Type.caption, color = c.textMuted)
+          Text(s.t("settings.version", "version" to ltr(localizeDigits(BuildConfig.VERSION_NAME, theme.lang))), style = Type.caption, color = c.textMuted)
         }
       }
       Spacer(Modifier.height(Spacing.md))

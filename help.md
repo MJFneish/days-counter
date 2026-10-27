@@ -124,19 +124,22 @@ start at 100). The same run writes `ios/project.yml` (`MARKETING_VERSION` = the 
 
 ---
 
-## 🧩 Home-screen widget (Android)
+## 🧩 Home-screen widget
 
 - Add it: long-press the home screen → **Widgets** → **Days Counter** (or Settings → "Add the
   widget to your home screen" in the app, on launchers that support it). Long-press the placed
   widget and drag its edges to resize — the layout switches between small / square / wide / large.
 - It shows the **pinned** countdown (Home → pin button on any countdown, or Settings).
-- For the day count to flip exactly on time on Android 13+, allow **Settings → Apps → Days Counter
-  → Alarms & reminders**. Without it, the flip can lag by up to a minute.
+- Exact alarms come with the app (`USE_EXACT_ALARM` on Android 13+), so the day count flips right
+  on time without any setting.
+- **iPhone**: touch and hold the home screen → Edit → Add Widget → Days Counter (small or medium);
+  on the lock screen: touch and hold it → Customize → Lock Screen → Days Counter (circular,
+  rectangular or inline).
 
 ```bash
 adb -s emulator-5554 shell dumpsys appwidget | grep -A3 dayscounter        # placed widgets + their sizes
 adb -s emulator-5554 shell am broadcast -a com.devlance.dayscounter.widget.REFRESH -n com.devlance.dayscounter/.widget.DaysWidgetProvider   # force a redraw
-adb -s emulator-5554 shell cmd appops set com.devlance.dayscounter SCHEDULE_EXACT_ALARM allow   # exact alarms on 13+
+adb -s emulator-5554 shell cmd appops set com.devlance.dayscounter SCHEDULE_EXACT_ALARM allow   # Android 12/12L only, if revoked (13+ uses USE_EXACT_ALARM)
 ```
 
 ---

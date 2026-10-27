@@ -78,7 +78,9 @@ final class DaysCounterUITests: XCTestCase {
     wait(for: [gone], timeout: 5)
 
     app.swipeUp()
-    XCTAssertTrue(element(app, labelStartingWith: "Version 2.0.0").waitForExistence(timeout: 5))
+    // The version sits in an LTR isolate ("Version \u{2066}2.0.0-…\u{2069}"), so match the number alone.
+    let version = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "2.0.0")).firstMatch
+    XCTAssertTrue(version.waitForExistence(timeout: 5))
     screenshot("04-settings-about-en")
 
     // Delete all → confirm → empty Home.
@@ -111,12 +113,24 @@ final class DaysCounterUITests: XCTestCase {
     XCTAssertTrue(element(app, labelStartingWith: "Graduation.").exists)
     screenshot("08-home-two-en")
 
-    // Pin it: it becomes the hero.
-    app.buttons["Show Graduation on the widget"].tap()
+    // Settings → widget → Change → Graduation: it becomes the hero (and the widget's countdown).
+    app.tabBars.buttons["Settings"].tap()
+    app.swipeUp()
+    XCTAssertTrue(app.staticTexts["HOME-SCREEN WIDGET"].waitForExistence(timeout: 5))
+    screenshot("10-settings-widget-en")
+    app.buttons["Change — Countdown on the widget"].tap()
+    XCTAssertTrue(app.staticTexts["Countdown on the widget"].waitForExistence(timeout: 5))
+    screenshot("10b-picker-en")
+    app.buttons["Graduation"].tap()
+    app.tabBars.buttons["Home"].tap()
     XCTAssertTrue(app.buttons["Show Sunday, 5 September 2027 on the widget"].waitForExistence(timeout: 5))
     screenshot("09-home-pinned-en")
 
-    // Edit through the hero, then delete.
+    // Pin the first one back from its row.
+    app.buttons["Show Sunday, 5 September 2027 on the widget"].tap()
+    XCTAssertTrue(app.buttons["Show Graduation on the widget"].waitForExistence(timeout: 5))
+
+    // Edit Graduation through its row, then delete it.
     element(app, labelStartingWith: "Graduation.").tap()
     XCTAssertTrue(app.staticTexts["Edit countdown"].waitForExistence(timeout: 5))
     scrollEditor(app, to: app.buttons["Delete countdown"], title: "Edit countdown")
@@ -125,6 +139,21 @@ final class DaysCounterUITests: XCTestCase {
     app.alerts.firstMatch.buttons["Delete"].tap()
     XCTAssertTrue(element(app, labelStartingWith: "Sunday, 5 September 2027.").waitForExistence(timeout: 5))
     XCTAssertFalse(element(app, labelStartingWith: "Graduation.").exists)
+  }
+
+  /// The widget's faces (small, medium, lock-screen) in the in-app gallery.
+  func testWidgetFaces() {
+    for (lang, name) in [("en", "20-widgets-en"), ("ar", "21-widgets-ar")] {
+      let app = XCUIApplication()
+      app.launchEnvironment["DAYS_COUNTER_RESET"] = "1"
+      app.launchEnvironment["DAYS_COUNTER_LANGUAGE"] = lang
+      app.launchEnvironment["DAYS_COUNTER_WIDGET_GALLERY"] = "1"
+      app.launch()
+      XCTAssertTrue(app.scrollViews["widgetGallery"].waitForExistence(timeout: 15) || app.otherElements["widgetGallery"].exists)
+      sleep(1)
+      screenshot(name)
+      app.terminate()
+    }
   }
 
   func testArabicSwitchesInstantly() {
