@@ -4,7 +4,7 @@
  * with the bare version ("0.2.0"), notes = the tagged commit's message unless given.
  *
  * Usage:
- *   yarn release                                   -> release for package.json's version
+ *   yarn release                                   -> release for native/version.properties' version
  *   yarn release --notes "text" | --notes-file path
  *   yarn release --dry-run                         -> show what would happen, touch nothing
  *
@@ -14,7 +14,7 @@
  *
  * `gh` isn't installed on this machine, so it talks to the REST API directly with the token Git
  * already stores for github.com (`git credential fill`). The token is never printed.
- * 0.x versions are marked as pre-releases.
+ * 0.x versions and pre-release versions (2.0.0-alpha.1) are marked as pre-releases.
  *
  * No file uploads, on purpose: the user doesn't want APKs on GitHub (2026-10-23). Builds stay local.
  */
@@ -49,7 +49,10 @@ for (let i = 0; i < args.length; i++) {
 
 const git = (...gitArgs) => execFileSync('git', gitArgs, { cwd: root, encoding: 'utf8' }).trim();
 
-const { version } = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
+// Since v2 the version lives in native/version.properties (scripts/bump-version.js).
+const properties = fs.readFileSync(path.join(root, 'native', 'version.properties'), 'utf8');
+const version = properties.match(/^VERSION_NAME=(.*)$/m)?.[1]?.trim();
+if (!version) fail('native/version.properties has no VERSION_NAME');
 const tag = `v${version}`;
 
 const remote = git('remote', 'get-url', 'origin');
@@ -64,7 +67,7 @@ const remoteTag = git('ls-remote', '--tags', 'origin', `refs/tags/${tag}`);
 if (!remoteTag) fail(`tag ${tag} is not on GitHub yet — tag the bump commit and push with --follow-tags first`);
 if (notes === null) notes = git('log', '-1', '--format=%B', tag);
 
-const prerelease = version.startsWith('0.');
+const prerelease = version.startsWith('0.') || version.includes('-');
 console.log(`repo:       ${owner}/${repo}`);
 console.log(`release:    ${version} (tag ${tag}${prerelease ? ', pre-release' : ''})`);
 if (dryRun) {

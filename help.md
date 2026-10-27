@@ -1,14 +1,43 @@
-# 🛠 Help — Days Counter (bare React Native CLI)
+# 🛠 Help — Days Counter
 
-Quick command reference and troubleshooting cheat sheet. This project is **bare React Native
-CLI** (like `Gregorian-hijri-date-converter`, unlike the Expo-based `prayer-times-lb`) —
-`android/` and `ios/` are real, checked-in native projects; there is no `expo prebuild`.
+Quick command reference and troubleshooting cheat sheet. **Since v2 the app is native Kotlin +
+Jetpack Compose in `native/`** (like Mawakit's v2). The bare React Native CLI app (`android/`,
+`ios/`, `src/`) is v1, kept until it's removed — its commands are further down.
 
-> ⚠️ **Yarn only** (Yarn 1 / classic) — never use `npm` in this repo.
+> ⚠️ **Yarn only** (Yarn 1 / classic) — never use `npm` in this repo. Yarn is only needed for the
+> helper scripts below; the native app itself builds with Gradle alone.
 
 ---
 
-## 🚀 Daily commands
+## 🚀 v2 (native) — daily commands
+
+```bash
+yarn test:native                       # JVM unit tests (countdown engine, phrases, stores, migration, widget payload)
+yarn test:native --tests '*Countdown*' # one suite
+cd native && ./gradlew assembleDebug   # debug APK → native/app/build/outputs/apk/debug/app-debug.apk
+yarn build:apk                         # release APK → dist/DaysCounter-v<version>-build<code>.apk
+yarn bump pre                          # 2.0.0-alpha.1 -> 2.0.0-alpha.2 (+ build number); see "Versioning"
+```
+
+```bash
+# Emulator (Pixel_8a is this project's AVD, on a fixed port so other projects' emulators can't take it)
+emulator -avd Pixel_8a -port 5554 -no-snapshot-load
+adb -s emulator-5554 install -r native/app/build/outputs/apk/debug/app-debug.apk
+adb -s emulator-5554 shell am start -n com.devlance.dayscounter/.MainActivity
+adb -s emulator-5554 shell run-as com.devlance.dayscounter ls shared_prefs databases   # debug builds only
+```
+
+Gradle needs JDK 17 (`JAVA_HOME=C:\Program Files\Java\jdk-17`). PowerShell: `cd native; .\gradlew assembleDebug`.
+
+**Every emulator shows `unauthorized`** (even after a cold boot / wipe): check the adb server —
+`tasklist /V /FI "IMAGENAME eq adb.exe"`. If its session is **Services** (session 0), it was
+started under another account and holds a different adb key; `adb kill-server` then
+`adb start-server` from your own terminal fixes it (found 2026-10-27). Tell any other Claude
+session using the emulator first.
+
+---
+
+## 🚀 v1 (React Native) — daily commands
 
 ```bash
 yarn install        # install deps
@@ -32,31 +61,33 @@ npx react-native doctor           # diagnose toolchain/env issues
 Each commit carries its own version, tag and GitHub release, and is pushed to `develop`:
 
 ```bash
-yarn bump minor                          # feature → 0.2.0 (fix → yarn bump patch)
+yarn bump pre                            # v2 phase → 2.0.0-alpha.N (after 2.0.0: minor = feature, patch = fix)
 git add -A && git commit -m "…"          # the bump goes in the same commit as the work
-git tag -a v0.2.0 -m "0.2.0"             # annotated, so --follow-tags pushes it
+git tag -a v2.0.0-alpha.2 -m "2.0.0-alpha.2"   # annotated, so --follow-tags pushes it
 git push origin develop --follow-tags
-yarn release                             # GitHub release "0.2.0" on tag v0.2.0 (notes = commit message)
+yarn release                             # GitHub release "2.0.0-alpha.2" on its tag (notes = commit message)
 yarn release --dry-run                   # preview
 ```
 
 `yarn release` uses the GitHub token Git already stores (`git credential fill`) — `gh` isn't
-installed on this machine. It updates the release if it already exists, and marks 0.x versions
-as pre-releases. **APKs are not uploaded to GitHub** (the user's choice) — build them locally.
+installed on this machine. It updates the release if it already exists, and marks 0.x and
+`-alpha` versions as pre-releases. **APKs are not uploaded to GitHub** (the user's choice) — build them locally.
 
 ### Version bump details
 
 ```bash
-yarn bump                    # build number only: android versionCode +1 (+ iOS CURRENT_PROJECT_VERSION)
-yarn bump patch              # 1.0.0 -> 1.0.1  + build number
-yarn bump minor              # 1.0.0 -> 1.1.0  + build number
-yarn bump major              # 1.0.0 -> 2.0.0  + build number
+yarn bump                    # build number only (VERSION_CODE +1)
+yarn bump patch              # 2.0.0 -> 2.0.1  + build number
+yarn bump minor              # 2.0.0 -> 2.1.0  + build number
+yarn bump major              # 2.0.0 -> 3.0.0  + build number
+yarn bump pre                # 2.0.0-alpha.1 -> 2.0.0-alpha.2 + build number
+yarn bump release            # 2.0.0-alpha.7 -> 2.0.0 + build number
 yarn bump patch --dry-run    # preview without writing anything
 ```
 
-Updates `package.json` (source of truth — Settings → About shows it), `android/app/build.gradle`
-(`versionCode` / `versionName`) and `ios/DaysCounter.xcodeproj/project.pbxproj`
-(`MARKETING_VERSION` / `CURRENT_PROJECT_VERSION`) in place — see `scripts/bump-version.js`.
+Since v2 the only version source is `native/version.properties` (`VERSION_NAME`,
+`VERSION_CODE`; v2 build numbers start at 100) — read by `native/app/build.gradle.kts`, Settings →
+About and `yarn release`. v1's `package.json` / `android/app/build.gradle` stay at 1.0.2.
 
 ---
 

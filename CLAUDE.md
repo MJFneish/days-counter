@@ -1,21 +1,38 @@
 # Days Counter (عدّاد الأيام) — countdowns + a resizable home-screen widget
 
-A bare **React Native CLI** (TypeScript) app that counts down to the dates that matter — days,
-hours, minutes and seconds, ticking live — with a **resizable Android home-screen widget** for the
-pinned countdown. Bilingual (English / Arabic with RTL), light and dark themes, fully offline.
-Two tabs (Home + Settings) and an animated loading screen.
+Counts down to the dates that matter — days, hours, minutes and seconds, ticking live — with a
+**resizable Android home-screen widget** for the pinned countdown. Bilingual (English / Arabic
+with RTL), light and dark themes, fully offline. Two tabs (Home + Settings) and an animated
+loading screen.
 
 See [`CONTINUE_PROJECT.md`](./CONTINUE_PROJECT.md) for a handoff snapshot if you're picking this up
 fresh, [`TODO.md`](./TODO.md) for the phased checklist (source of truth for "what's done"), and
 [`help.md`](./help.md) for the command cheat sheet.
 
 **Project skills** (`.claude/skills/`) — check these before the matching kind of work:
-- `verify` — **read before running `yarn test` / `yarn typecheck` / a Gradle build.** Don't run any
-  of them proactively; the user wants an explicit "test it" / "build it" first.
+- `verify` — **read before running `yarn test:native` / a Gradle build / an emulator check.**
 
-**This is bare RN CLI, not Expo** — same as the sibling `Gregorian-hijri-date-converter` (the
-template this app was built from), unlike `prayer-times-lb`. `android/` and `ios/` are real,
-checked-in native projects you edit directly.
+## v2: the native Android app — read first
+
+Since 2.0.0 (alphas from 2026-10-27) the app is **native Kotlin + Jetpack Compose in
+[`native/`](./native/)** — no React Native — converted the same way as Mawakit (prayer-times-lb's
+v2). The React Native app in `android/`, `ios/`, `src/`, `App.tsx` is **v1**, kept in the repo until
+the user asks to remove it; the sections further down describe v1, and the engine/feature rules
+there still hold — v2 ports them file for file into
+`native/app/src/main/java/com/devlance/dayscounter/`.
+
+- **Toolchain** = Mawakit's, proven on this machine: Gradle 9.3.1 wrapper, AGP 8.12.0, Kotlin
+  2.2.10, Compose BOM 2025.08.00, compileSdk/targetSdk 36, minSdk 24, JDK 17 target. No
+  `java.time` (needs API 26 or desugaring, whose library isn't in the offline Gradle cache) —
+  dates go through `java.util.Calendar`.
+- **Updating over v1 must keep working:** same application id (`com.devlance.dayscounter`), same
+  signing key (`native/app/debug.keystore` = v1's RN template key, the public Android debug key),
+  same launcher activity (`.MainActivity`). Android only — v2 has no iOS app.
+- **Versions:** `native/version.properties` (`yarn bump patch|minor|major|pre|release`); v2 build
+  numbers start at 100 (v1 ended at 9). `yarn release` reads that file; `-alpha` versions are
+  GitHub pre-releases. `package.json`'s version (1.0.2) is v1's and no longer bumped.
+- **Splash:** AndroidX SplashScreen (`Theme.App.SplashScreen`) shows v1's bootsplash emblem
+  (`drawable-*/splash_emblem.png`: 288 dp canvas, 120 dp emblem) on `#170B26`.
 
 ## Every commit = a version (user rule, 2026-10-23)
 
@@ -23,13 +40,16 @@ The user asked for **each commit to carry its own app version, a GitHub tag and 
 be pushed to `develop`** (the repo's only branch). The routine, in this order:
 
 1. `yarn bump minor` (feature) / `yarn bump patch` (fix) — in the **same** commit as the work.
+   During the v2 conversion each phase is `yarn bump pre` (2.0.0-alpha.N), then
+   `yarn bump release` for 2.0.0 once fully tested.
 2. `git commit` → `git tag -a v<version> -m "<version>"` → `git push origin develop --follow-tags`.
 3. `yarn release` → GitHub release titled `<version>` (notes = the commit message;
    [`scripts/github-release.js`](./scripts/github-release.js), REST API with the token from
    `git credential fill` — `gh` isn't installed; never print the token).
 
-Versions ran **0.1.0 (scaffold) → minor per feature → 1.0.0 = finished and fully tested**. 0.x
-releases are marked pre-release. **No APKs on GitHub** — the user said "do not upload the apk to
+Versions ran **0.1.0 (scaffold) → minor per feature → 1.0.0 = finished and fully tested**, then
+v2 **2.0.0-alpha.1 → alpha per phase → 2.0.0** (same idea). 0.x and `-alpha` releases are marked
+pre-release. **No APKs on GitHub** — the user said "do not upload the apk to
 github" (2026-10-23); the one briefly attached to 1.0.0 was removed and the script has no upload
 option. Build APKs locally (help.md) and hand over the path.
 

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- Night tile of the splash and the loading screen (brand.night). -->
+  <color name="splash_background">#170B26</color>
+  <!-- Light theme background, shown for a frame behind Compose (colors.background). -->
+  <color name="app_background">#FFF8F4</color>
+
+  <style name="AppTheme" parent="android:Theme.Material.Light.NoActionBar">
+    <item name="android:windowBackground">@color/app_background</item>
+    <item name="android:statusBarColor">@android:color/transparent</item>
+    <item name="android:navigationBarColor">@android:color/transparent</item>
+  </style>
+
+  <!-- The splash shows v1's bootsplash emblem (288 dp icon canvas, 120 dp emblem in the middle) on
+       the night background. The animated LoadingScreen's first frame is the same picture, so the
+       hand-off is invisible. -->
+  <style name="Theme.App.SplashScreen" parent="Theme.SplashScreen">
+    <item name="windowSplashScreenBackground">@color/splash_background</item>
+    <item name="windowSplashScreenAnimatedIcon">@drawable/splash_emblem</item>
+    <item name="postSplashScreenTheme">@style/AppTheme</item>
+  </style>
+</resources>

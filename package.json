@@ -8,8 +8,10 @@
     "lint": "eslint .",
     "start": "react-native start",
     "test": "jest",
+    "test:native": "node scripts/test-native.js",
     "typecheck": "tsc --noEmit",
     "bump": "node scripts/bump-version.js",
+    "build:apk": "node scripts/build-apk.js",
     "release": "node scripts/github-release.js",
     "postinstall": "patch-package"
   },

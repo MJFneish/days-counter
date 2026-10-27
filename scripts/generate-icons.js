@@ -18,7 +18,11 @@ const sharp = require('sharp');
 
 const root = path.resolve(__dirname, '..');
 const brandDir = path.join(root, 'assets', 'brand');
-const resDir = path.join(root, 'android', 'app', 'src', 'main', 'res');
+// v2 (native/) and v1 (android/, until it's removed) carry the same launcher icons.
+const resDirs = [
+  path.join(root, 'native', 'app', 'src', 'main', 'res'),
+  path.join(root, 'android', 'app', 'src', 'main', 'res'),
+].filter(dir => fs.existsSync(dir));
 const iosIconDir = path.join(root, 'ios', 'DaysCounter', 'Images.xcassets', 'AppIcon.appiconset');
 
 // Same values as `brand` in src/theme/colors.ts.
@@ -111,13 +115,15 @@ async function main() {
   fs.writeFileSync(path.join(brandDir, 'icon-monochrome.svg'), SOURCES.adaptiveMonochrome);
   fs.writeFileSync(path.join(brandDir, 'splash-logo.svg'), SOURCES.splash);
 
-  for (const [density, scale] of Object.entries(DENSITIES)) {
-    const dir = path.join(resDir, `mipmap-${density}`);
-    await png(SOURCES.legacy, 48 * scale, path.join(dir, 'ic_launcher.png'));
-    await png(SOURCES.legacyRound, 48 * scale, path.join(dir, 'ic_launcher_round.png'));
-    await png(SOURCES.adaptiveBackground, 108 * scale, path.join(dir, 'ic_launcher_background.png'));
-    await png(SOURCES.adaptiveForeground, 108 * scale, path.join(dir, 'ic_launcher_foreground.png'));
-    await png(SOURCES.adaptiveMonochrome, 108 * scale, path.join(dir, 'ic_launcher_monochrome.png'));
+  for (const resDir of resDirs) {
+    for (const [density, scale] of Object.entries(DENSITIES)) {
+      const dir = path.join(resDir, `mipmap-${density}`);
+      await png(SOURCES.legacy, 48 * scale, path.join(dir, 'ic_launcher.png'));
+      await png(SOURCES.legacyRound, 48 * scale, path.join(dir, 'ic_launcher_round.png'));
+      await png(SOURCES.adaptiveBackground, 108 * scale, path.join(dir, 'ic_launcher_background.png'));
+      await png(SOURCES.adaptiveForeground, 108 * scale, path.join(dir, 'ic_launcher_foreground.png'));
+      await png(SOURCES.adaptiveMonochrome, 108 * scale, path.join(dir, 'ic_launcher_monochrome.png'));
+    }
   }
 
   const adaptiveXml = `<?xml version="1.0" encoding="utf-8"?>
@@ -127,10 +133,12 @@ async function main() {
     <monochrome android:drawable="@mipmap/ic_launcher_monochrome" />
 </adaptive-icon>
 `;
-  const anydpi = path.join(resDir, 'mipmap-anydpi-v26');
-  fs.mkdirSync(anydpi, { recursive: true });
-  fs.writeFileSync(path.join(anydpi, 'ic_launcher.xml'), adaptiveXml);
-  fs.writeFileSync(path.join(anydpi, 'ic_launcher_round.xml'), adaptiveXml);
+  for (const resDir of resDirs) {
+    const anydpi = path.join(resDir, 'mipmap-anydpi-v26');
+    fs.mkdirSync(anydpi, { recursive: true });
+    fs.writeFileSync(path.join(anydpi, 'ic_launcher.xml'), adaptiveXml);
+    fs.writeFileSync(path.join(anydpi, 'ic_launcher_round.xml'), adaptiveXml);
+  }
 
   // iOS: single 1024 universal icon (Xcode 14+ derives every size from it).
   await sharp(Buffer.from(SOURCES.ios), { density: 740 })

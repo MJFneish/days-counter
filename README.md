@@ -10,14 +10,14 @@ and dark themes, fully offline.
   every second without the app running.
 - **Settings**: language, theme, countdown options, widget, about.
 
-Bare React Native CLI 0.87 + TypeScript, Yarn 1.
+**v2 (since 2.0.0): native Android — Kotlin + Jetpack Compose in [`native/`](./native/).**
+v1 was a bare React Native CLI app (`src/`, `android/`, `ios/`), kept in the repo until removed.
 
 ```bash
-yarn install
-yarn start        # Metro
-yarn android      # or see help.md for building with Gradle directly on Windows
-yarn test         # countdown engine tests
-yarn bump minor   # version bump (package.json + Android + iOS)
+yarn test:native  # JVM unit tests of the native app
+cd native && ./gradlew assembleDebug   # debug APK
+yarn build:apk    # release APK → dist/
+yarn bump pre     # version bump (native/version.properties)
 yarn release      # GitHub release for the current version's tag
 ```
 
