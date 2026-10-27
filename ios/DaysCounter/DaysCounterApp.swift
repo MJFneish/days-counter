@@ -47,6 +47,21 @@ struct RootView: View {
       }
     }
     .background(theme.colors.background.ignoresSafeArea())
+    // Dark status-bar text would sit on the night loading screen; hide it until the app shows.
+    .statusBarHidden(loading)
+    .sheet(item: $model.editor) { request in
+      let state = model.countdowns
+      let existing = request.countdownId.flatMap { id in state.countdowns.first { $0.id == id } }
+      let initial = existing.map { CountdownDraft(title: $0.title, target: $0.target, color: $0.color, icon: $0.icon, pin: $0.id == state.pinnedId) }
+        ?? CountdownDraft.new(existing: state.countdowns, hasPinned: state.pinnedId != nil, now: nowMs())
+      // A sheet gets its own copy of the app's language direction, theme and objects.
+      EditorView(countdownId: request.countdownId, initial: initial)
+        .modifier(Themed())
+        .environmentObject(model)
+        .environmentObject(clock)
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
+    }
     .task {
       try? await Task.sleep(nanoseconds: UInt64(minLoadingVisible * 1_000_000_000))
       withAnimation(.easeOut(duration: 0.38)) { loading = false }

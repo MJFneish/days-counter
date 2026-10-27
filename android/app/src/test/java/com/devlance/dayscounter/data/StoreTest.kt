@@ -157,6 +157,25 @@ class StoreTest {
   }
 
   @Test
+  fun aNewCountdownStartsAMonthAheadInAnUnusedColor() {
+    val seed = CountdownsState().seeded("seed", now).countdowns
+    val d = CountdownDraft.new(seed, hasPinned = true, now = now)
+    assertEquals(LocalDateTime(2026, 11, 27, 0, 0), d.target)
+    assertEquals(CountdownColor.VIOLET, d.color) // ember is taken
+    assertEquals(CountdownIcon.CALENDAR, d.icon)
+    assertEquals("", d.title)
+    assertFalse(d.pin)
+    assertTrue(CountdownDraft.new(emptyList(), hasPinned = false, now = now).pin)
+    // 31 Jan → the end of February; December → January next year.
+    assertEquals(LocalDateTime(2027, 2, 28, 0, 0), CountdownDraft.new(emptyList(), true, at(2027, 1, 31, 15)).target)
+    assertEquals(LocalDateTime(2027, 1, 15, 0, 0), CountdownDraft.new(emptyList(), true, at(2026, 12, 15, 9)).target)
+    // Every color used → cycle by count.
+    val nine = CountdownColor.entries.mapIndexed { i, color -> seed[0].copy(id = "c$i", color = color) }
+    assertEquals(CountdownColor.EMBER, CountdownDraft.new(nine, true, now).color)
+    assertEquals(CountdownColor.VIOLET, CountdownDraft.new(nine + seed[0].copy(id = "x"), true, now).color)
+  }
+
+  @Test
   fun idsLookLikeV1s() {
     val id = newCountdownId(1793117904179L)
     assertTrue(id.startsWith(1793117904179L.toString(36)))

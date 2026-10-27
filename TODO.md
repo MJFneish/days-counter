@@ -58,20 +58,25 @@ app build, UI smoke test + screenshots).
       countdown options, delete all (confirm + toast), about with the full version
 - [x] Home: a first version listing the countdowns (the real Home is phase 5)
 
-## v2 Phase 5 — Home, both apps (2.0.0-alpha.5)
-- [ ] Hero (live D/H/M/S, digits slide in, progress, arrived / count-up), stats card, list rows
-      (headline number, progress, pin), empty state, toasts
+## v2 Phase 5 — Home + editor, both apps (2.0.0-alpha.5) ✅
+(v1 shipped Home and its editor together; every Home control opens the editor, so they're one
+phase here too.)
+- [x] Hero for the pinned countdown: live D/H/M/S (rolling digits), progress of the wait,
+      "The day is here!" / count-up / "This date has passed"; "The wait in numbers" card
+- [x] Other countdowns: icon, name, short date, progress line, headline number (hours/minutes on
+      the last day), pin button (→ hero + widget, toast); upcoming first, then passed; empty state
+- [x] Editor sheet: live preview, name (40), date wheels (1900–2100, day clamped) and time wheels
+      (12/24 h), 9 colors, 12 icons, show-on-widget, past-date note, delete with confirm, toasts;
+      new countdown = one month ahead at 00:00 in the first unused color (`CountdownDraft`, tested)
+- [x] Android: in-window sheet over the tabs (scrim, slide, Back closes it, above the keyboard),
+      snapping LazyColumn wheels; iOS: native sheet + wheel pickers
 
-## v2 Phase 6 — Editor + countdown picker, both apps (2.0.0-alpha.6)
-- [ ] Bottom sheet: live preview, name (40), date/time wheels (12/24 h), 9 colors, 12 icons,
-      show-on-widget, delete with confirm; past-date note
-- [ ] Settings' countdown picker sheet
-
-## v2 Phase 7 — Widgets, both apps (2.0.0-alpha.7)
-- [ ] Android: provider ported (same class name + prefs, so placed widgets survive the update);
-      payload built in Kotlin, pushed on every change and foreground; Settings widget section
-- [ ] iOS: WidgetKit extension (App Group), home-screen sizes + lock-screen accessory families,
-      live `Text(.timer)` seconds
+## v2 Phase 6 — Widgets, both apps (2.0.0-alpha.6)
+- [ ] Android: v1's provider (same class name + prefs, so placed widgets survive the update) on the
+      shared engine; payload built in Kotlin and re-pushed on every change and foreground; exact
+      alarms via USE_EXACT_ALARM; Settings widget section + countdown picker sheet
+- [ ] iOS: WidgetKit extension (App Group), small/medium + lock-screen circular/rectangular/inline,
+      live timer text, timeline at each day change; Settings widget section + picker
 
 ## v2 — Full test + 2.0.0
 - [ ] Unit tests both apps, Android release build, emulator walk-through EN/AR light/dark, widget

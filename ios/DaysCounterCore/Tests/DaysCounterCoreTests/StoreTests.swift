@@ -128,6 +128,29 @@ final class StoreTests: XCTestCase {
     XCTAssertEqual(StoreJson.decodeCountdowns(nil, now: now), CountdownsState())
   }
 
+  func testANewCountdownStartsAMonthAheadInAnUnusedColor() {
+    let seed = CountdownsState().seededIfNeeded(id: "seed", now: now).countdowns
+    let d = CountdownDraft.new(existing: seed, hasPinned: true, now: now)
+    XCTAssertEqual(d.target, dt(2026, 11, 27))
+    XCTAssertEqual(d.color, .violet)
+    XCTAssertEqual(d.icon, .calendar)
+    XCTAssertEqual(d.title, "")
+    XCTAssertFalse(d.pin)
+    XCTAssertTrue(CountdownDraft.new(existing: [], hasPinned: false, now: now).pin)
+    XCTAssertEqual(CountdownDraft.new(existing: [], hasPinned: true, now: at(2027, 1, 31, 15)).target, dt(2027, 2, 28))
+    XCTAssertEqual(CountdownDraft.new(existing: [], hasPinned: true, now: at(2026, 12, 15, 9)).target, dt(2027, 1, 15))
+    let nine = CountdownColor.allCases.enumerated().map { i, color -> Countdown in
+      var c = seed[0]
+      c.id = "c\(i)"
+      c.color = color
+      return c
+    }
+    XCTAssertEqual(CountdownDraft.new(existing: nine, hasPinned: true, now: now).color, .ember)
+    var extra = seed[0]
+    extra.id = "x"
+    XCTAssertEqual(CountdownDraft.new(existing: nine + [extra], hasPinned: true, now: now).color, .violet)
+  }
+
   func testIdsLookLikeV1s() {
     let id = newCountdownId(now: 1793117904179)
     XCTAssertTrue(id.hasPrefix(String(Int64(1793117904179), radix: 36)))

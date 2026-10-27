@@ -46,7 +46,9 @@ in 2.0.0-alpha.2 (git history, tag `v1.0.2`).
 - 2.0.0-alpha.4: stores + v1 import (Android), Dusk theme, instant RTL, icons, emblem, loading
   screen, clock, tabs, Settings — on both apps (Android checked on the emulator, iOS by the CI UI
   test's screenshots).
-- Next: the real Home (alpha.5), the editor (alpha.6), widgets (alpha.7), 2.0.0 — see `TODO.md`.
+- 2.0.0-alpha.5: the real Home (hero, stats, list, pin) and the add/edit editor (wheels, colors,
+  icons, delete) on both apps.
+- Next: widgets on both (alpha.6), then the full test and 2.0.0 — see `TODO.md`.
 - Coordination: another Claude session converts the Hijri converter the same way and uses the
   Pixel_7 emulator on port 5560; this project uses Pixel_8a on 5554.
 

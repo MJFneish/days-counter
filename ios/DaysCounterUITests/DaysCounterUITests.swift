@@ -31,6 +31,22 @@ final class DaysCounterUITests: XCTestCase {
     try? shot.pngRepresentation.write(to: folder.appendingPathComponent("\(name).png"))
   }
 
+  /// The hero card (one accessibility element: "<title>. in N days").
+  private func hero(_ app: XCUIApplication) -> XCUIElement {
+    app.descendants(matching: .any)["hero"].firstMatch
+  }
+
+  /// Scrolls the editor sheet until `target` can be tapped, by dragging section labels towards the
+  /// sheet's title — never the middle of the screen, where a wheel would turn instead.
+  private func scrollEditor(_ app: XCUIApplication, to target: XCUIElement, title: String) {
+    let top = app.staticTexts[title]
+    for _ in 0..<8 where !(target.exists && target.isHittable) {
+      let handles = ["NAME", "DATE", "TIME", "COLOR", "ICON", "Optional — the date is shown when it's empty"].map { app.staticTexts[$0] }
+      guard let handle = handles.first(where: { $0.exists && $0.isHittable && $0.frame.minY > top.frame.maxY + 120 }) else { break }
+      handle.press(forDuration: 0.05, thenDragTo: top)
+    }
+  }
+
   /// Any element whose label starts with `prefix`.
   private func element(_ app: XCUIApplication, labelStartingWith prefix: String) -> XCUIElement {
     app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", prefix)).firstMatch
@@ -41,8 +57,9 @@ final class DaysCounterUITests: XCTestCase {
     screenshot("00-loading-en")
     XCTAssertTrue(app.staticTexts["Countdowns"].waitForExistence(timeout: 15))
     // The seeded example: 5 September 2027, titled by its date.
-    XCTAssertTrue(app.staticTexts["Sunday, 5 September 2027"].waitForExistence(timeout: 5))
-    XCTAssertTrue(element(app, labelStartingWith: "in ").exists)
+    // The hero is one element: "<title>. in N days".
+    XCTAssertTrue(element(app, labelStartingWith: "Sunday, 5 September 2027. in ").waitForExistence(timeout: 5))
+    XCTAssertTrue(app.staticTexts["The wait in numbers"].exists)
     screenshot("01-home-en")
 
     app.tabBars.buttons["Settings"].tap()
@@ -70,7 +87,44 @@ final class DaysCounterUITests: XCTestCase {
     app.alerts.firstMatch.buttons["Delete"].tap()
     app.tabBars.buttons["Home"].tap()
     XCTAssertTrue(app.staticTexts["No countdowns yet"].waitForExistence(timeout: 5))
-    screenshot("05-home-empty-dark-en")
+    screenshot("05-home-empty-en")
+  }
+
+  func testAddPinEditDelete() {
+    let app = launch("en")
+    XCTAssertTrue(app.staticTexts["Countdowns"].waitForExistence(timeout: 15))
+
+    // Add: name, December, Ocean, Trophy → Save.
+    app.buttons["New countdown"].tap()
+    XCTAssertTrue(app.staticTexts["New countdown"].waitForExistence(timeout: 5))
+    let name = app.textFields.firstMatch
+    name.tap()
+    name.typeText("Graduation\n") // return closes the keyboard
+    app.pickerWheels.element(boundBy: 1).adjust(toPickerWheelValue: "December")
+    screenshot("06-editor-top-en")
+    scrollEditor(app, to: app.buttons["Trophy"], title: "New countdown")
+    app.buttons["Ocean"].tap()
+    app.buttons["Trophy"].tap()
+    screenshot("07-editor-bottom-en")
+    app.buttons["Save"].tap()
+    XCTAssertTrue(app.staticTexts["OTHER COUNTDOWNS"].waitForExistence(timeout: 5))
+    XCTAssertTrue(element(app, labelStartingWith: "Graduation.").exists)
+    screenshot("08-home-two-en")
+
+    // Pin it: it becomes the hero.
+    app.buttons["Show Graduation on the widget"].tap()
+    XCTAssertTrue(app.buttons["Show Sunday, 5 September 2027 on the widget"].waitForExistence(timeout: 5))
+    screenshot("09-home-pinned-en")
+
+    // Edit through the hero, then delete.
+    element(app, labelStartingWith: "Graduation.").tap()
+    XCTAssertTrue(app.staticTexts["Edit countdown"].waitForExistence(timeout: 5))
+    scrollEditor(app, to: app.buttons["Delete countdown"], title: "Edit countdown")
+    app.buttons["Delete countdown"].tap()
+    XCTAssertTrue(app.alerts.firstMatch.waitForExistence(timeout: 5))
+    app.alerts.firstMatch.buttons["Delete"].tap()
+    XCTAssertTrue(element(app, labelStartingWith: "Sunday, 5 September 2027.").waitForExistence(timeout: 5))
+    XCTAssertFalse(element(app, labelStartingWith: "Graduation.").exists)
   }
 
   func testArabicSwitchesInstantly() {
@@ -82,7 +136,8 @@ final class DaysCounterUITests: XCTestCase {
     XCTAssertTrue(app.staticTexts["اللغة"].exists)
     screenshot("11-settings-ar")
     app.tabBars.buttons["الرئيسية"].tap()
-    XCTAssertTrue(app.staticTexts["الأحد ٥ أيلول ٢٠٢٧"].waitForExistence(timeout: 5))
+    XCTAssertTrue(hero(app).waitForExistence(timeout: 5))
+    XCTAssertTrue(hero(app).label.hasPrefix("الأحد ٥ أيلول ٢٠٢٧"), "hero label: \(hero(app).label)")
     screenshot("12-home-ar")
   }
 

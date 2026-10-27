@@ -13,6 +13,8 @@ final class AppModel: ObservableObject {
 
   @Published private(set) var settings: Settings
   @Published private(set) var countdowns: CountdownsState
+  /// The add/edit sheet: open with a countdown's id, or `nil` for a new one.
+  @Published var editor: EditorRequest?
   /// The latest confirmation toast ("Countdown added"); `toastId` changes with each one.
   @Published private(set) var toast: String?
   @Published private(set) var toastId = 0
@@ -61,6 +63,10 @@ final class AppModel: ObservableObject {
     saveCountdowns()
   }
 
+  func openEditor(_ countdownId: String?) {
+    editor = EditorRequest(countdownId: countdownId)
+  }
+
   func showToast(_ text: String) {
     toast = text
     toastId += 1
@@ -73,6 +79,12 @@ final class AppModel: ObservableObject {
   private func saveCountdowns() {
     defaults.set(StoreJson.data(StoreJson.encodeCountdowns(countdowns)), forKey: AppModel.keyCountdowns)
   }
+}
+
+/// Which countdown the editor sheet edits (`nil` = a new one); a fresh id for every opening.
+struct EditorRequest: Identifiable {
+  let id = UUID()
+  let countdownId: String?
 }
 
 /// The app's one clock (epoch ms). Every countdown on screen reads it, so they all tick together.

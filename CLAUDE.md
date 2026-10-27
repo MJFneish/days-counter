@@ -171,29 +171,29 @@ the two apps run the same algorithms — change both together, with their tests.
 - **One clock** (Android `ui/Clock.kt` → `LocalNow`; iOS `Clock` in `AppModel.swift`): ticks on
   whole seconds — whole minutes when "Show seconds" is off — aligned to the wall clock, and stops
   in the background. Every countdown reads it, so they all tick together. Don't add per-view timers.
-- **Home** ([`HomeScreen.tsx`](./src/screens/HomeScreen.tsx)): header (today's date + round "+"
-  button) → [`HeroCountdown`](./src/components/home/HeroCountdown.tsx) for the **pinned**
-  countdown (its gradient, big day count, H/M/S tiles whose digits slide in on change, progress of
-  the wait since the countdown was created, "The day is here!" on the day) →
-  [`StatsCard`](./src/components/home/StatsCard.tsx) (same wait on the calendar / in weeks / in
-  hours) → every other countdown as a [`CountdownRow`](./src/components/home/CountdownRow.tsx)
-  (headline number drops to hours/minutes on the last day; pin button moves it to the hero +
-  widget). The list re-sorts only when a countdown passes, not every second. Empty state when
-  nothing is left. A countdown with no name shows its date as the title
-  ([`present.ts`](./src/core/present.ts)).
-- **Editor** ([`CountdownEditor.tsx`](./src/components/editor/CountdownEditor.tsx)): one bottom
-  sheet for add + edit — live preview in the chosen gradient, name (optional, 40 chars), date
-  wheels (1900–2100, day clamped to the month) and time wheels (12/24 h per Settings) from
-  [`DateTimeWheels`](./src/components/picker/DateTimeWheels.tsx) on the Hijri converter's
-  `WheelPicker`, 9 colors, 12 icons, "show on the widget", delete (confirm). A new countdown
-  defaults to one month ahead at 00:00 in the first unused color, pinned if none is. A past date
-  is allowed (note shown) — it counts up.
-- **Sheets are not RN `Modal`s.** [`BottomSheet`](./src/components/ui/BottomSheet.tsx) draws a
-  scrim + sliding sheet over the whole app, closes on the Android back button, and takes a
-  numeric max height from the window. Every sheet (editor, countdown picker) is mounted once in
-  [`SheetHost`](./src/components/SheetHost.tsx) (App.tsx, above the navigator) and opened through
-  [`useSheetStore`](./src/store/useSheetStore.ts) (`openEditor(id | null)`, `openPicker()`).
-  Why: see "Found on the first emulator run" below.
+- **Home** (Android `ui/screens/HomeScreen.kt` + `ui/home/`, iOS `Views/HomeView.swift` +
+  `HomeParts.swift`): header (today's date + round "+" button) → the hero for the **pinned**
+  countdown (its gradient, big day count, H/M/S tiles whose digits roll on change, progress of the
+  wait since the countdown was created, "The day is here!" on the day) → "The wait in numbers"
+  (on the calendar / in weeks / in hours) → every other countdown as a row (headline number drops
+  to hours/minutes on the last day; pin button moves it to the hero + widget), upcoming soonest
+  first, then passed ones. Empty state when nothing is left. A countdown with no name shows its
+  date as the title. On iOS the hero and each row are single accessibility elements
+  ("<title>. in 312 days") — the UI test matches them by that label.
+- **Editor** (Android `ui/editor/`, iOS `Views/EditorView.swift`): one sheet for add + edit — live
+  preview in the chosen gradient, name (optional, 40 chars), date wheels (1900–2100, day clamped to
+  the month; day : month : year columns 0.8 : 1.6 : 1, mirrored in Arabic) and time wheels (12/24 h
+  per Settings), 9 colors, 12 icons, "show on the widget" (hidden when it's already pinned), delete
+  (confirm). A new countdown is `CountdownDraft.new`: one month ahead at 00:00 (the day clamped to
+  that month), the first unused color, pinned if none is. A past date is allowed (note shown) — it
+  counts up. Android's wheels are snapping LazyColumns with a selection band and fades; iOS uses
+  native wheel `Picker`s (with the UIPickerView intrinsic-width fix so side-by-side wheels don't
+  steal each other's touches).
+- **Sheets**: Android draws them inside the activity window (`ui/Sheets.kt` `BottomSheet`: scrim,
+  slide, Back and a scrim tap close it, `imePadding` keeps Save/Cancel above the keyboard), mounted
+  once in `AppRoot` and opened through `Sheets.openEditor(id | null)` / `Sheets.picker` — never a
+  dialog/popup (v1's RN Modal left the bottom of Save/Cancel untouchable). iOS uses the native
+  `.sheet(item:)` from `AppModel.editor`, re-applying `Themed` + the environment objects inside.
 - **Settings** (Android `ui/screens/SettingsScreen.kt`, iOS `Views/SettingsView.swift`; v1's
   `SettingsScreen.tsx`), in this order:
   language (segmented EN/AR) · appearance (follow-system switch, light/dark tiles otherwise —

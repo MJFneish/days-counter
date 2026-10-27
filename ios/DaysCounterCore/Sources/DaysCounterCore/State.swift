@@ -37,6 +37,41 @@ public struct CountdownInput: Equatable, Sendable {
   }
 }
 
+/// The editor's date wheels span these years.
+public let YEAR_MIN = 1900
+public let YEAR_MAX = 2100
+
+/// The editor's working copy; nothing is saved until Save.
+public struct CountdownDraft: Equatable, Sendable {
+  public var title: String
+  public var target: LocalDateTime
+  public var color: CountdownColor
+  public var icon: CountdownIcon
+  public var pin: Bool
+
+  public init(title: String, target: LocalDateTime, color: CountdownColor, icon: CountdownIcon, pin: Bool) {
+    self.title = title
+    self.target = target
+    self.color = color
+    self.icon = icon
+    self.pin = pin
+  }
+
+  public var input: CountdownInput { CountdownInput(title: title, target: target, color: color, icon: icon) }
+
+  /// A new countdown starts one month from today at midnight (the day clamped to that month's
+  /// end), in the first color not used yet, pinned if nothing is — as on Android.
+  public static func new(existing: [Countdown], hasPinned: Bool, now: Int64, zone: TimeZone = TimeZones.device) -> CountdownDraft {
+    let today = fromInstant(now, zone)
+    let year = today.month == 12 ? today.year + 1 : today.year
+    let month = today.month == 12 ? 1 : today.month + 1
+    let target = LocalDateTime(year: min(max(year, YEAR_MIN), YEAR_MAX), month: month, day: min(today.day, daysInMonth(year, month)))
+    let used = Set(existing.map(\.color))
+    let color = CountdownColor.allCases.first { !used.contains($0) } ?? CountdownColor.allCases[existing.count % CountdownColor.allCases.count]
+    return CountdownDraft(title: "", target: target, color: color, icon: .calendar, pin: !hasPinned)
+  }
+}
+
 /// The user's own example (2026-10-23): count down to 5 September 2027. Seeded on first launch.
 public let SEED_TARGET = LocalDateTime(year: 2027, month: 9, day: 5)
 

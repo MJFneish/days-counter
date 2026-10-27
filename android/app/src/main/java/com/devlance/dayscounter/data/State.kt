@@ -5,6 +5,8 @@ import com.devlance.dayscounter.core.CountdownColor
 import com.devlance.dayscounter.core.CountdownIcon
 import com.devlance.dayscounter.core.Lang
 import com.devlance.dayscounter.core.LocalDateTime
+import com.devlance.dayscounter.core.daysInMonth
+import com.devlance.dayscounter.core.fromInstant
 import com.devlance.dayscounter.core.toInstant
 import java.util.TimeZone
 
@@ -30,6 +32,29 @@ data class Settings(
 
 /** What the editor hands the store. */
 data class CountdownInput(val title: String, val target: LocalDateTime, val color: CountdownColor, val icon: CountdownIcon)
+
+/** The editor's date wheels span these years. */
+const val YEAR_MIN = 1900
+const val YEAR_MAX = 2100
+
+/** The editor's working copy; nothing is saved until Save. */
+data class CountdownDraft(val title: String, val target: LocalDateTime, val color: CountdownColor, val icon: CountdownIcon, val pin: Boolean) {
+  val input: CountdownInput get() = CountdownInput(title, target, color, icon)
+
+  companion object {
+    /** A new countdown starts one month from today at midnight (the day clamped to that month's
+     * end), in the first color not used yet, pinned if nothing is. */
+    fun new(existing: List<Countdown>, hasPinned: Boolean, now: Long, zone: TimeZone = TimeZone.getDefault()): CountdownDraft {
+      val today = fromInstant(now, zone)
+      val year = if (today.month == 12) today.year + 1 else today.year
+      val month = if (today.month == 12) 1 else today.month + 1
+      val target = LocalDateTime(year.coerceIn(YEAR_MIN, YEAR_MAX), month, minOf(today.day, daysInMonth(year, month)), 0, 0)
+      val used = existing.map { it.color }.toSet()
+      val color = CountdownColor.entries.firstOrNull { it !in used } ?: CountdownColor.entries[existing.size % CountdownColor.entries.size]
+      return CountdownDraft("", target, color, CountdownIcon.CALENDAR, pin = !hasPinned)
+    }
+  }
+}
 
 /** The user's own example (2026-10-23): count down to 5 September 2027. Seeded on first launch. */
 val SEED_TARGET = LocalDateTime(2027, 9, 5, 0, 0)

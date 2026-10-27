@@ -41,6 +41,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.devlance.dayscounter.ui.components.ToastHost
+import com.devlance.dayscounter.ui.editor.EditorSheet
 import com.devlance.dayscounter.ui.icons.LucideIcon
 import com.devlance.dayscounter.ui.icons.LucideIconData
 import com.devlance.dayscounter.ui.icons.LucideIcons
@@ -105,6 +106,8 @@ fun AppRoot(onSystemBars: (lightIcons: Boolean) -> Unit) {
         }
         TabBar(pager.currentPage) { navigator.goToTab(it) }
       }
+      // Sheets cover the tabs and the tab bar; toasts and the loading screen go above them.
+      EditorSheet()
       ToastHost()
       AnimatedVisibility(visible = loading, enter = androidx.compose.animation.EnterTransition.None, exit = fadeOut(tween(380))) {
         LoadingScreen()
